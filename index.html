@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cahier de lecture</title>
-<meta name="description" content="Vos lectures, citations et notes, avec l'idée maîtresse de chaque livre établie par Claude. Fonctionne hors ligne.">
+<meta name="description" content="Vos lectures, citations et notes, avec l'idée maîtresse de chaque livre établie par l'IA de votre choix. Fonctionne hors ligne.">
 <meta name="theme-color" content="#22261A">
 <meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
@@ -445,12 +445,20 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
     <div class="settings">
       <h1 class="brand">Réglages</h1>
 
-      <section class="set-card" aria-labelledby="set-key-title">
-        <h2 id="set-key-title">Clé d'API Claude</h2>
-        <p class="help">Elle permet l'idée maîtresse, la lecture des photos et les thèmes croisés. Créez-la sur la console Claude (platform.claude.com, rubrique API Keys). Elle reste dans ce téléphone et n'est envoyée qu'à Anthropic. L'usage est facturé sur votre compte API, en dehors de votre abonnement Claude.</p>
-        <label class="sr" for="api-key">Clé d'API</label>
+      <section class="set-card" aria-labelledby="set-ai-title">
+        <h2 id="set-ai-title">Votre IA</h2>
+        <p class="help">L'IA établit l'idée maîtresse, lit les photos de pages et croise les thèmes. Choisissez celle que vous utilisez, avec votre propre clé d'API : elle reste dans ce téléphone et n'est envoyée qu'au service choisi.</p>
+        <fieldset class="seg" id="ai-providers">
+          <legend class="sr">Service d'IA</legend>
+          <label class="opt"><input type="radio" name="provider" id="pv-anthropic" value="anthropic"><span>Claude</span></label>
+          <label class="opt"><input type="radio" name="provider" id="pv-openai" value="openai"><span>ChatGPT</span></label>
+          <label class="opt"><input type="radio" name="provider" id="pv-gemini" value="gemini"><span>Gemini</span></label>
+          <label class="opt"><input type="radio" name="provider" id="pv-mistral" value="mistral"><span>Mistral</span></label>
+        </fieldset>
+        <p class="help" id="ai-where"></p>
+        <label class="label" for="api-key" id="api-key-label">Clé d'API</label>
         <div class="key-row">
-          <input id="api-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+          <input id="api-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
           <button class="btn ghost small" type="button" data-act="key-toggle" id="key-toggle">Afficher</button>
         </div>
         <div class="set-actions">
@@ -458,16 +466,11 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
           <button class="link danger" type="button" data-act="key-clear" id="key-clear">Effacer la clé</button>
         </div>
         <p class="set-status" id="key-status" role="status" aria-live="polite"></p>
-      </section>
-
-      <section class="set-card" aria-labelledby="set-model-title">
-        <h2 id="set-model-title">Modèle Claude</h2>
-        <fieldset class="models">
-          <legend class="sr">Modèle utilisé</legend>
-          <label class="model"><input type="radio" name="model" value="claude-haiku-5-5"><span>Haiku 5.5 : rapide et économique</span><small>Suffisant pour la plupart des idées maîtresses.</small></label>
-          <label class="model"><input type="radio" name="model" value="claude-sonnet-5-5"><span>Sonnet 5.5 : équilibré</span><small>Recommandé, notamment pour lire les photos de pages.</small></label>
-          <label class="model"><input type="radio" name="model" value="claude-opus-5-5"><span>Opus 5.5 : le plus fin</span><small>Pour les thèmes croisés exigeants. Environ deux fois le prix de Sonnet.</small></label>
-        </fieldset>
+        <div class="field">
+          <label for="ai-model">Modèle</label>
+          <select id="ai-model"></select>
+          <p class="help" id="model-help"></p>
+        </div>
       </section>
 
       <section class="set-card" aria-labelledby="set-queue-title">
@@ -497,7 +500,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
 
       <section class="set-card" aria-labelledby="set-share-title">
         <h2 id="set-share-title">Partager avec des amis</h2>
-        <p class="help">Envoyez le lien de l'application : elle s'installe sur Android comme sur iPhone. Chacun a son propre cahier, privé, dans son téléphone, et utilise sa propre clé d'API Claude. Rien de votre cahier n'est envoyé.</p>
+        <p class="help">Envoyez le lien de l'application : elle s'installe sur Android comme sur iPhone. Chacun a son propre cahier, privé, dans son téléphone, et choisit sa propre IA (Claude, ChatGPT, Gemini ou Mistral) avec sa propre clé. Rien de votre cahier n'est envoyé.</p>
         <p class="ask" id="app-url"></p>
         <div class="set-actions"><button class="btn ghost small" type="button" data-act="share-app">Partager le lien</button></div>
       </section>
@@ -529,9 +532,9 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
       <div class="panel-actions"><button class="btn ghost small" data-compose="sources">+ Ajouter une source</button></div>
       <ol class="items" id="l-sources"></ol>
       <details class="research">
-        <summary>Chercher des recensions avec Claude</summary>
+        <summary>Chercher des recensions avec votre IA</summary>
         <div class="research-body">
-          <p>Demandez la recherche dans l'application Claude, puis collez le résumé comme nouvelle source. Par exemple :</p>
+          <p>Demandez la recherche à votre assistant (Claude, ChatGPT, Gemini, Mistral…), puis collez le résumé comme nouvelle source. Par exemple :</p>
           <p class="ask" id="research-ask"></p>
           <button class="link" type="button" data-act="copy-ask">Copier la demande</button>
         </div>
@@ -583,7 +586,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
           <input id="f-pub" maxlength="16" placeholder="1832" autocomplete="off" aria-describedby="f-pub-help">
         </div>
       </div>
-      <p class="help" id="f-pub-help">Année de première parution, par exemple 1832, ou 431 av. J.-C. Laissée vide, Claude la proposera à la synthèse s'il connaît l'ouvrage.</p>
+      <p class="help" id="f-pub-help">Année de première parution, par exemple 1832, ou 431 av. J.-C. Laissée vide, l'IA la proposera à la synthèse si elle connaît l'ouvrage.</p>
       <fieldset class="seg">
         <legend>Type d'ouvrage</legend>
         <label class="opt"><input type="radio" name="ftype" id="f-type-essai" value="essai" checked><span>Essai</span></label>
@@ -633,7 +636,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
         </div>
         <div class="photo" id="photo-panel" hidden>
           <div class="photo-head">
-            <img id="photo-thumb" alt="Photo de la page envoyée à Claude" hidden>
+            <img id="photo-thumb" alt="Photo de la page envoyée à l'IA" hidden>
             <div>
               <p class="photo-status" id="photo-status" role="status" aria-live="polite"></p>
               <div class="photo-actions">
@@ -669,7 +672,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
         <input id="s-url" type="url" inputmode="url" placeholder="Lien (facultatif)" autocomplete="off">
         <label class="label" for="s-text">Extrait</label>
         <textarea id="s-text" rows="6" placeholder="Collez l'extrait ici."></textarea>
-        <p class="help">Claude ne lit pas les liens : collez le texte qui compte.</p>
+        <p class="help">L'IA ne lit pas les liens : collez le texte qui compte.</p>
       </div>
       <p class="draft-note" id="mc-draft" hidden>Brouillon retrouvé.</p>
       <p class="form-error" id="mc-error" role="alert"></p>
@@ -687,7 +690,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
 <script>
 (() => {
 "use strict";
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.2.0";
 
 /* ---------- utilitaires ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -718,8 +721,12 @@ const STATUS = { "a-lire": "À lire", "en-cours": "En cours", "lu": "Lu" };
 const MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 const MONTHS_SHORT = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 const KINDS = ["quotes", "notes", "sources"];
-const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
-const DEFAULT_MODEL = "claude-sonnet-5-5";
+const PROVIDERS = {
+  anthropic: { name: "Claude", company: "Anthropic", site: "https://platform.claude.com/", where: "console Claude (platform.claude.com), rubrique API Keys.", note: "L'usage est facturé à la demande, en dehors de l'abonnement Claude.", placeholder: "sk-ant-…", fallback: "claude-sonnet-5-5", hints: [/^claude-sonnet-5-5$/, /sonnet/, /^claude-/] },
+  openai: { name: "ChatGPT", company: "OpenAI", site: "https://platform.openai.com/", where: "plateforme OpenAI (platform.openai.com), rubrique API keys.", note: "L'usage est facturé à la demande, en dehors de l'abonnement ChatGPT.", placeholder: "sk-…", fallback: "gpt-6.1-sol", hints: [/^gpt-6\.1-sol$/, /-sol$/, /mini$/, /^gpt-\d/] },
+  gemini: { name: "Gemini", company: "Google", site: "https://aistudio.google.com/", where: "Google AI Studio (aistudio.google.com), bouton « Get API key ».", note: "Google propose en général un usage gratuit limité, puis une facturation à la demande.", placeholder: "AIza…", fallback: "gemini-flash-latest", hints: [/^gemini-flash-latest$/, /^gemini-[\d.]+-flash$/, /flash(?!-lite)/, /^gemini-/] },
+  mistral: { name: "Mistral", company: "Mistral AI", site: "https://console.mistral.ai/", where: "console Mistral (console.mistral.ai), rubrique API Keys.", note: "Mistral propose en général une formule d'essai gratuite, puis une facturation à la demande.", placeholder: "Votre clé Mistral", fallback: "mistral-medium-latest", hints: [/^mistral-medium-latest$/, /^mistral-large-latest$/, /^mistral-small-latest$/, /medium/, /large/, /^mistral-/] }
+};
 const UA = navigator.userAgent || "";
 const IS_IOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const IS_IOS_SAFARI = IS_IOS && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(UA);
@@ -805,7 +812,7 @@ const readKey = b => { const p = readParts(b); return p ? `${p.y}-${String(p.m |
 const S = {
   books: new Map(), themeDocs: new Map(), jobs: [],
   ready: false, storageError: false, persisted: null,
-  apiKey: LS.get("cahier.apiKey") || "", model: MODELS.includes(LS.get("cahier.model")) ? LS.get("cahier.model") : DEFAULT_MODEL,
+  ai: null,
   installEvt: null, queueRunning: false,
   view: "home", current: null, themeOpen: null, backTo: null, homeScroll: 0,
   status: "all", query: "", sort: LS.get("cahier.sort") || "recent", tab: "quotes", ideaOpen: false,
@@ -814,6 +821,32 @@ const S = {
   ocr: null, ocrCtl: null, lastSel: "", thumbUrl: null, photoFor: null, restore: null
 };
 if (!SORTS[S.sort]) S.sort = "recent";
+
+/* ---------- IA choisie : service, clés et modèles (gardés dans ce téléphone) ---------- */
+function loadAI() {
+  let a = null;
+  try { a = JSON.parse(LS.get("cahier.ai") || "null"); } catch (_) { a = null; }
+  if (!a || typeof a !== "object") a = {};
+  const obj = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  a.keys = obj(a.keys); a.models = obj(a.models); a.lists = obj(a.lists);
+  if (!PROVIDERS[a.provider]) a.provider = "anthropic";
+  const oldKey = LS.get("cahier.apiKey"), oldModel = LS.get("cahier.model");
+  if (oldKey && !a.keys.anthropic) a.keys.anthropic = oldKey;
+  if (oldModel && !a.models.anthropic) a.models.anthropic = oldModel;
+  return a;
+}
+function saveAI() { LS.set("cahier.ai", JSON.stringify(S.ai)); LS.del("cahier.apiKey"); LS.del("cahier.model"); }
+S.ai = loadAI();
+const AI = () => PROVIDERS[S.ai.provider].name;
+const curKey = () => S.ai.keys[S.ai.provider] || "";
+function defaultModel(p) {
+  const list = S.ai.lists[p] || [];
+  for (const h of PROVIDERS[p].hints) { const m = list.find(x => h.test(x.id)); if (m) return m.id; }
+  return list.length ? list[0].id : PROVIDERS[p].fallback;
+}
+const curModel = () => S.ai.models[S.ai.provider] || defaultModel(S.ai.provider);
+const byName = o => (o && o.by && PROVIDERS[o.by.provider]) ? PROVIDERS[o.by.provider].name : "Claude";
+const byLabel = o => byName(o) + (o && o.by && o.by.model ? ` (${o.by.model})` : "");
 
 /* ---------- stockage dans le téléphone (IndexedDB) ---------- */
 let dbPromise = null;
@@ -1014,7 +1047,7 @@ function welcomeHTML() {
     ${IS_IOS && !installed ? `<p class="caution">Sur iPhone, installez d'abord l'application, puis continuez depuis son icône : Safari et l'application installée ne gardent pas les mêmes fiches.</p>` : ""}
     <ol class="steps">
       <li><strong>${installed ? "Application installée" : "Installer l'application"}</strong><span class="help">${esc(installHelp())}</span>${S.installEvt && !installed ? '<button class="btn ghost small" data-act="install">Installer</button>' : ""}</li>
-      <li><strong>Ajouter votre clé d'API Claude</strong><span class="help">Pour l'idée maîtresse, la lecture des photos et les thèmes croisés. Chacun utilise sa propre clé.</span><button class="btn ghost small" data-act="settings">${S.apiKey ? "Clé enregistrée · Réglages" : "Ouvrir les réglages"}</button></li>
+      <li><strong>Choisir votre IA et ajouter sa clé</strong><span class="help">Claude, ChatGPT, Gemini ou Mistral : pour l'idée maîtresse, la lecture des photos et les thèmes croisés. Chacun utilise sa propre clé.</span><button class="btn ghost small" data-act="settings">${curKey() ? `${esc(AI())} · Réglages` : "Ouvrir les réglages"}</button></li>
       <li><strong>Reprendre un cahier existant (facultatif)</strong><span class="help">Une sauvegarde faite dans le Cahier de Claude ou sur un autre téléphone, Android ou iPhone.</span><label class="btn ghost small" for="restore-input" role="button" tabindex="0">Importer une sauvegarde</label></li>
     </ol>
     <button class="btn primary" data-act="add">Ajouter un premier livre</button>
@@ -1029,7 +1062,7 @@ function renderHome() {
   } else {
     tally.textContent = S.storageError ? "Stockage inaccessible" : "Ouverture de votre cahier…";
   }
-  $("#queue-note").textContent = S.jobs.length ? `${plural(S.jobs.length, "demande")} à Claude en attente${navigator.onLine ? "" : " du réseau"}` : "";
+  $("#queue-note").textContent = S.jobs.length ? `${plural(S.jobs.length, "demande")} à l'IA en attente${navigator.onLine ? "" : " du réseau"}` : "";
   $("#storage-notice").hidden = !S.storageError;
   $("#menu-home").hidden = !S.ready;
   const has = S.ready && books.length > 0;
@@ -1071,9 +1104,9 @@ function ideaMoreHTML(b) {
     ${s.aCreuser ? `<p class="dig"><span class="label">À creuser</span>${esc(s.aCreuser)}</p>` : ""}
     ${kw ? `<div class="kw"><span class="label">Thèmes proposés</span><div class="chips">${kw}</div></div>` : ""}
     ${s.anneeParution != null && b.published == null ? `<div class="kw"><span class="label">Première parution proposée</span><div class="chips"><button class="chip add" data-act="accept-pub">+ ${esc(pubLabel(s.anneeParution))}</button></div></div>` : ""}
-    ${s.anneeParution != null && b.published != null && +s.anneeParution !== +b.published ? `<p class="caution">Claude situe la première parution en ${esc(pubLabel(s.anneeParution))} ; vous avez noté ${esc(pubLabel(b.published))}. <button class="link" data-act="accept-pub">Retenir ${esc(pubLabel(s.anneeParution))}</button></p>` : ""}
-    ${s.ouvrageConnu === false ? `<p class="caution">Claude ne connaît pas cet ouvrage avec certitude : cette synthèse repose uniquement sur votre matière.</p>` : ""}
-    <p class="prov">Établie le ${esc(fmtDate(s.at))} à partir de ${plural(basis.quotes || 0, "citation")}, ${plural(basis.notes || 0, "note")} et ${plural(basis.sources || 0, "source externe", "sources externes")}. Part de connaissance générale : ${esc(partLabel)}.</p>`;
+    ${s.anneeParution != null && b.published != null && +s.anneeParution !== +b.published ? `<p class="caution">${esc(byName(s))} situe la première parution en ${esc(pubLabel(s.anneeParution))} ; vous avez noté ${esc(pubLabel(b.published))}. <button class="link" data-act="accept-pub">Retenir ${esc(pubLabel(s.anneeParution))}</button></p>` : ""}
+    ${s.ouvrageConnu === false ? `<p class="caution">${esc(byName(s))} ne connaît pas cet ouvrage avec certitude : cette synthèse repose uniquement sur votre matière.</p>` : ""}
+    <p class="prov">Établie par ${esc(byLabel(s))} le ${esc(fmtDate(s.at))} à partir de ${plural(basis.quotes || 0, "citation")}, ${plural(basis.notes || 0, "note")} et ${plural(basis.sources || 0, "source externe", "sources externes")}. Part de connaissance générale : ${esc(partLabel)}.</p>`;
 }
 function renderIdea(b) {
   const s = b.synthesis, has = !!(s && s.phrase);
@@ -1086,8 +1119,8 @@ function renderIdea(b) {
     html += `<p class="idea-sentence">${esc(s.phrase)}</p><div class="idea-more"${S.ideaOpen ? "" : " hidden"}>${ideaMoreHTML(b)}</div>`;
   } else {
     html += `<p class="idea-empty">${total
-      ? "Votre matière est prête. Claude part de vos citations et de vos notes, puis complète avec ce qu'il sait de l'ouvrage."
-      : "Ajoutez quelques citations ou notes avec la barre du bas, ou demandez l'idée maîtresse dès maintenant : Claude partira de ce qu'il sait de l'ouvrage."}</p>`;
+      ? `Votre matière est prête. ${esc(AI())} part de vos citations et de vos notes, puis complète avec sa connaissance de l'ouvrage.`
+      : `Ajoutez quelques citations ou notes avec la barre du bas, ou demandez l'idée maîtresse dès maintenant : ${esc(AI())} partira de sa connaissance de l'ouvrage.`}</p>`;
   }
   let actions = "";
   if (has) actions += `<button class="link" data-act="idea-toggle" aria-expanded="${S.ideaOpen}">${S.ideaOpen ? "Replier la synthèse" : "Lire la synthèse complète"}</button>`;
@@ -1096,10 +1129,10 @@ function renderIdea(b) {
   }
   if (busy) actions += `<button class="btn ghost small" data-act="synth-stop">Arrêter</button>`;
   let st = "";
-  if (busy) st = `<span class="pulse" aria-hidden="true"></span>Claude lit vos citations, vos notes et vos sources. Comptez de dix secondes à une minute.`;
+  if (busy) st = `<span class="pulse" aria-hidden="true"></span>${esc(AI())} lit vos citations, vos notes et vos sources. Comptez de dix secondes à une minute.`;
   else if (queued) st = "En attente du réseau : la synthèse partira dès le retour de la connexion.";
   else if (S.synthMsg && S.synthMsg.id === S.current) st = esc(S.synthMsg.text) + (S.synthMsg.settings ? ' <button class="link" data-act="settings">Ouvrir les réglages</button>' : "");
-  else if (!S.apiKey && S.ready) st = 'Ajoutez votre clé d\'API Claude pour établir l\'idée maîtresse. <button class="link" data-act="settings">Ouvrir les réglages</button>';
+  else if (!curKey() && S.ready) st = 'Choisissez votre IA et ajoutez sa clé pour établir l\'idée maîtresse. <button class="link" data-act="settings">Ouvrir les réglages</button>';
   html += `<div class="synth-row">${actions}<p class="synth-status" role="status" aria-live="polite">${st}</p></div>`;
   $("#d-idea").innerHTML = html;
 }
@@ -1109,7 +1142,7 @@ function renderInbox(id, b) {
   if (!items.length && !waiting) { box.hidden = true; box.innerHTML = ""; return; }
   box.hidden = false;
   box.innerHTML = `<p class="label">Pages photographiées à trier</p>
-    ${waiting ? `<p class="help">${plural(waiting, "photo")} en attente du réseau : Claude la lira dès le retour de la connexion.</p>` : ""}
+    ${waiting ? `<p class="help">${plural(waiting, "photo")} en attente du réseau : l'IA la lira dès le retour de la connexion.</p>` : ""}
     ${items.length ? `<ul>${items.map(it => `<li>
       <button class="link" data-inbox="${esc(it.id)}">${it.page ? `Page ${esc(it.page)}` : "Page sans numéro"} · ${it.marked && it.marked.length ? plural(it.marked.length, "passage marqué", "passages marqués") : "texte complet"}</button>
       <span class="meta">${esc(fmtDate(it.at))}</span>
@@ -1139,7 +1172,7 @@ function itemHTML(kind, it) {
 const NONE = {
   quotes: "Aucune citation pour l'instant. Touchez « Citation » en bas de l'écran, ou photographiez une page.",
   notes: "Aucune note pour l'instant. Touchez « Note » en bas de l'écran pour noter une idée, une objection, un rapprochement.",
-  sources: "Aucune source externe. Collez un extrait de recension, de quatrième de couverture ou d'article : Claude s'en servira pour la synthèse."
+  sources: "Aucune source externe. Collez un extrait de recension, de quatrième de couverture ou d'article : l'IA s'en servira pour la synthèse."
 };
 function renderBook() {
   const id = S.current, b = S.books.get(id);
@@ -1179,7 +1212,7 @@ function renderThemes() {
   const box = $("#themes-list");
   if (!S.ready) { box.innerHTML = ""; return; }
   if (!themes.length) {
-    box.innerHTML = `<div class="empty"><h2>Pas encore de thème</h2><p>Ajoutez des thèmes à vos fiches, dans le champ Thèmes ou parmi ceux que Claude propose après une synthèse. Les livres qui partagent un thème se retrouvent ici, prêts à dialoguer.</p></div>`;
+    box.innerHTML = `<div class="empty"><h2>Pas encore de thème</h2><p>Ajoutez des thèmes à vos fiches, dans le champ Thèmes ou parmi ceux que l'IA propose après une synthèse. Les livres qui partagent un thème se retrouvent ici, prêts à dialoguer.</p></div>`;
     return;
   }
   box.innerHTML = `<ul class="theme-list">${themes.map(([t, n]) => {
@@ -1214,21 +1247,21 @@ function renderTheme() {
         ${(r.divergences || []).length ? `<h3 class="label">Tensions et différences</h3><ul class="points">${r.divergences.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
         ${cites.length ? `<h3 class="label">Citations qui se répondent</h3>${cites.map(c => `<figure class="key-quote"><blockquote><span class="hl">${esc(c.text)}</span></blockquote><figcaption><button class="link" data-open="${esc(c.bookId)}">${esc(c.title)}${c.page ? `, p. ${esc(cleanPage(c.page))}` : ""}</button></figcaption></figure>`).join("")}` : ""}
         ${r.question ? `<p class="dig"><span class="label">Pour prolonger</span>${esc(r.question)}</p>` : ""}
-        <p class="prov">Établie le ${esc(fmtDate(doc.at))} à partir de ${plural((doc.basis && doc.basis.ids || []).length, "ouvrage")}.</p>
+        <p class="prov">Établie par ${esc(byLabel(doc))} le ${esc(fmtDate(doc.at))} à partir de ${plural((doc.basis && doc.basis.ids || []).length, "ouvrage")}.</p>
       </div>`;
   } else {
     synth += `<p class="idea-empty">${entries.length < 2
       ? "Ce thème ne réunit encore qu'un livre. Ajoutez-le à une autre fiche pour faire dialoguer vos lectures."
-      : `Claude peut faire dialoguer ces ${entries.length} lectures : ce qu'elles partagent, ce qui les oppose, et les citations qui se répondent.`}</p>`;
+      : `${esc(AI())} peut faire dialoguer ces ${entries.length} lectures : ce qu'elles partagent, ce qui les oppose, et les citations qui se répondent.`}</p>`;
   }
   let actions = "";
   if (entries.length >= 2 && !queued) actions += `<button class="btn ${r ? "ghost small" : "primary"}" data-act="tsynth"${(S.tsynth || !S.ready) ? " disabled" : ""}>${busy ? "Synthèse en cours…" : r ? "Mettre à jour" : "Faire dialoguer ces lectures"}</button>`;
   if (busy) actions += `<button class="btn ghost small" data-act="tsynth-stop">Arrêter</button>`;
   let st = "";
-  if (busy) st = `<span class="pulse" aria-hidden="true"></span>Claude croise vos fiches. Comptez de vingt secondes à une minute.`;
+  if (busy) st = `<span class="pulse" aria-hidden="true"></span>${esc(AI())} croise vos fiches. Comptez de vingt secondes à une minute.`;
   else if (queued) st = "En attente du réseau : la synthèse croisée partira dès le retour de la connexion.";
   else if (S.tsynthMsg && S.tsynthMsg.theme === t) st = esc(S.tsynthMsg.text) + (S.tsynthMsg.settings ? ' <button class="link" data-act="settings">Ouvrir les réglages</button>' : "");
-  else if (!S.apiKey && entries.length >= 2) st = 'Ajoutez votre clé d\'API Claude pour croiser ces lectures. <button class="link" data-act="settings">Ouvrir les réglages</button>';
+  else if (!curKey() && entries.length >= 2) st = 'Choisissez votre IA et ajoutez sa clé pour croiser ces lectures. <button class="link" data-act="settings">Ouvrir les réglages</button>';
   synth += `<div class="synth-row">${actions}<p class="synth-status" role="status" aria-live="polite">${st}</p></div>`;
   $("#theme-body").innerHTML = `
     <header class="theme-head"><p class="label">Thème</p><h1 class="d-title">${esc(t)}</h1><p class="tally">${plural(entries.length, "livre")}</p></header>
@@ -1239,12 +1272,24 @@ function renderTheme() {
 
 /* ---------- rendu : réglages ---------- */
 function renderSettings() {
+  const pv = S.ai.provider, P = PROVIDERS[pv];
+  for (const r of document.querySelectorAll('input[name="provider"]')) r.checked = r.value === pv;
+  $("#ai-where").innerHTML = `Clé ${esc(P.name)} : ${esc(P.where)} ${esc(P.note)} <a class="src-url" href="${P.site}" target="_blank" rel="noopener noreferrer">Ouvrir le site</a>`;
+  $("#api-key-label").textContent = `Clé d'API ${P.name}`;
   const inp = $("#api-key");
-  if (document.activeElement !== inp && !inp.dataset.dirty) inp.value = S.apiKey;
-  $("#key-clear").hidden = !S.apiKey;
+  inp.placeholder = P.placeholder;
+  if (document.activeElement !== inp && !inp.dataset.dirty) inp.value = curKey();
+  $("#key-clear").hidden = !curKey();
   const ks = $("#key-status");
-  if (!ks.dataset.locked) { ks.className = "set-status"; ks.textContent = S.apiKey ? "Une clé est enregistrée dans ce téléphone." : "Aucune clé enregistrée : les fonctions de Claude sont en pause."; }
-  for (const r of document.querySelectorAll('input[name="model"]')) r.checked = r.value === S.model;
+  if (!ks.dataset.locked) { ks.className = "set-status"; ks.textContent = curKey() ? `Une clé ${P.name} est enregistrée dans ce téléphone.` : `Aucune clé ${P.name} enregistrée : les fonctions d'IA sont en pause.`; }
+  const list = S.ai.lists[pv] || [], cur = curModel(), rec = defaultModel(pv);
+  const opts = list.slice();
+  if (!opts.some(m => m.id === cur)) opts.unshift({ id: cur, label: cur });
+  $("#ai-model").innerHTML = opts.map(m => `<option value="${esc(m.id)}"${m.id === cur ? " selected" : ""}>${esc(m.label && m.label !== m.id ? `${m.label} · ${m.id}` : m.id)}${list.length && m.id === rec ? " (recommandé)" : ""}</option>`).join("");
+  const info = list.find(m => m.id === cur);
+  $("#model-help").textContent = !list.length ? "Enregistrez votre clé pour voir la liste des modèles disponibles."
+    : info && info.vision === false ? "Ce modèle ne lit pas les images : choisissez-en un autre pour photographier des pages."
+    : `${plural(list.length, "modèle disponible", "modèles disponibles")} avec votre clé. Le modèle recommandé convient pour tout le cahier.`;
   $("#queue-status").textContent = S.jobs.length
     ? `${plural(S.jobs.length, "demande")} en attente : ${[["synth", "idée maîtresse"], ["theme", "thème croisé"], ["ocr", "photo"]].map(([k, l]) => { const n = S.jobs.filter(j => j.type === k).length; return n ? `${n} ${l}${n > 1 ? "s" : ""}` : ""; }).filter(Boolean).join(", ")}.`
     : "Aucune demande en attente.";
@@ -1410,7 +1455,7 @@ function setStatus(id, st) {
 const FORMS = {
   quotes:  { fields: { text: "#q-text", page: "#q-page", comment: "#q-comment" }, title: "Nouvelle citation", editTitle: "Modifier la citation", required: "Recopiez la citation avant de l'ajouter.", added: "Citation ajoutée" },
   notes:   { fields: { text: "#n-text", page: "#n-page" }, title: "Nouvelle note", editTitle: "Modifier la note", required: "Écrivez la note avant de l'ajouter.", added: "Note ajoutée" },
-  sources: { fields: { label: "#s-label", url: "#s-url", text: "#s-text" }, title: "Nouvelle source", editTitle: "Modifier la source", required: "Collez l'extrait de la source : Claude ne lit pas les liens seuls.", added: "Source ajoutée" }
+  sources: { fields: { label: "#s-label", url: "#s-url", text: "#s-text" }, title: "Nouvelle source", editTitle: "Modifier la source", required: "Collez l'extrait de la source : l'IA ne lit pas les liens seuls.", added: "Source ajoutée" }
 };
 const draftKey = (bookId, kind) => `cahier.draft.${bookId}.${kind}`;
 function draftGet(bookId, kind) { try { const v = JSON.parse(LS.get(draftKey(bookId, kind)) || "null"); return v && typeof v === "object" ? v : null; } catch (_) { return null; } }
@@ -1450,7 +1495,7 @@ function openComposer(kind, bookId, editId) {
   for (const ta of document.querySelectorAll("#grp-" + kind + " textarea")) autosize(ta);
   setTimeout(() => { try { $(f.fields.text).focus({ preventScroll: true }); } catch (_) {} }, 60);
 }
-// Une page lue par Claude mais dont aucun passage n'a été repris est gardée « à trier » plutôt que perdue.
+// Une page lue par l'IA mais dont aucun passage n'a été repris est gardée « à trier » plutôt que perdue.
 function keepUnusedOcr() {
   const o = S.ocr, c = S.composer;
   if (!o || !c || o.fromInbox || o.used.size || !(o.paras.length || o.marked.length)) return false;
@@ -1522,21 +1567,28 @@ function armOrRun(btn, fn, label) {
   btn._t = setTimeout(() => { delete btn.dataset.armed; btn.innerHTML = btn.dataset.label; btn.classList.remove("armed"); }, 4000);
 }
 
-/* ---------- appel à l'API Claude ---------- */
+/* ---------- appel à l'IA choisie ---------- */
 const ERR = {
-  no_key: "Ajoutez votre clé d'API Claude dans les Réglages pour utiliser cette fonction.",
-  bad_key: "La clé d'API est refusée. Vérifiez-la dans les Réglages.",
-  forbidden: "Cette clé d'API n'a pas accès à ce modèle. Choisissez un autre modèle dans les Réglages.",
-  no_credit: "Votre compte API Claude n'a plus de crédit. Rechargez-le sur la console Claude, puis relancez.",
-  rate_limited: "Trop de demandes en peu de temps. Réessayez dans une minute.",
-  overloaded: "Le service Claude est momentanément surchargé. Réessayez dans un instant.",
+  no_key: "Choisissez votre IA et ajoutez sa clé dans les Réglages pour utiliser cette fonction.",
+  bad_key: () => `La clé ${AI()} est refusée. Vérifiez-la dans les Réglages.`,
+  forbidden: () => `Cette clé ${AI()} n'a pas accès à ce modèle ou à ce service. Choisissez un autre modèle dans les Réglages.`,
+  model: () => `Ce modèle n'est pas disponible avec votre clé ${AI()}. Choisissez-en un autre dans les Réglages.`,
+  no_credit: () => `Votre compte ${PROVIDERS[S.ai.provider].company} n'a plus de crédit. Rechargez-le sur son site, puis relancez.`,
+  rate_limited: "Trop de demandes en peu de temps, ou quota atteint. Réessayez dans une minute.",
+  overloaded: () => `Le service ${AI()} est momentanément surchargé. Réessayez dans un instant.`,
   prompt_too_large: "Trop de matière d'un coup. Retirez ou raccourcissez une source collée, puis relancez.",
-  invalid_json: "La réponse de Claude était incomplète. Relancez.",
+  invalid_json: () => `La réponse de ${AI()} était incomplète. Relancez.`,
+  refused: () => `${AI()} a refusé de traiter ce contenu. Retirez l'extrait en cause, puis relancez.`,
+  unreachable: () => `Impossible de joindre ${AI()}. Vérifiez la connexion. Si cela persiste, ce service refuse peut-être les appels d'une application web : essayez-en un autre.`,
   cancelled: "Demande arrêtée.",
   offline: "Pas de réseau : la demande est en attente et partira dès le retour de la connexion."
 };
-const errText = e => ERR[e && e.code] || `Claude n'a pas pu traiter la demande${e && e.status ? ` (code ${e.status})` : ""}. Relancez dans un instant.`;
-const needsSettings = e => !!(e && ["no_key", "bad_key", "forbidden"].includes(e.code));
+const errText = e => {
+  const v = ERR[e && e.code];
+  if (v) return typeof v === "function" ? v() : v;
+  return `${AI()} n'a pas pu traiter la demande${e && e.status ? ` (code ${e.status})` : ""}. Relancez dans un instant.`;
+};
+const needsSettings = e => !!(e && ["no_key", "bad_key", "forbidden", "model"].includes(e.code));
 function parseJsonLoose(text) {
   const t = String(text || "").trim();
   try { return JSON.parse(t); } catch (_) {}
@@ -1554,45 +1606,127 @@ function blobToB64(blob) {
     r.readAsDataURL(blob);
   });
 }
-async function askClaude(prompt, opts = {}) {
-  if (!S.apiKey) throw { code: "no_key" };
-  if (!navigator.onLine) throw { code: "offline" };
-  const content = [];
-  for (const img of opts.images || []) {
-    const type = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(img.type) ? img.type : "image/jpeg";
-    content.push({ type: "image", source: { type: "base64", media_type: type, data: await blobToB64(img) } });
-  }
-  content.push({ type: "text", text: prompt + "\n\nRéponds uniquement par cet objet JSON, sans aucun texte avant ni après." });
-  let res;
+// Traduit une réponse d'erreur, quel que soit le service, en un code compris par l'application.
+async function httpError(res) {
+  let msg = "", code = "";
   try {
-    res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST", signal: opts.signal,
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": S.apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({ model: opts.model || S.model, max_tokens: opts.maxTokens || 2500, messages: [{ role: "user", content }] })
-    });
-  } catch (e) {
+    const j = await res.json();
+    const e = j && (j.error !== undefined ? j.error : j);
+    if (typeof e === "string") msg = e;
+    else if (e) { msg = e.message || e.msg || (typeof e.detail === "string" ? e.detail : "") || ""; code = e.code || e.type || e.status || ""; }
+    if (j && Array.isArray(j.detail)) msg = j.detail.map(d => d && d.msg).filter(Boolean).join(" ") || msg;
+    if (j && typeof j.message === "string" && !msg) msg = j.message;
+  } catch (_) {}
+  const st = res.status, m = `${msg} ${code}`.toLowerCase();
+  let c = "api_error";
+  if (st === 401 || /api key not valid|invalid api key|invalid_api_key|incorrect api key|api_key_invalid|unauthorized/.test(m)) c = "bad_key";
+  else if (/insufficient_quota|credit|billing|payment|balance/.test(m)) c = "no_credit";
+  else if (st === 404 || /model_not_found|not found for api version|does not exist|invalid model|unknown model|no such model/.test(m)) c = "model";
+  else if (st === 413 || /context_length|context length|too long|too large|maximum context|exceeds the maximum/.test(m)) c = "prompt_too_large";
+  else if (st === 403) c = "forbidden";
+  else if (st === 429) c = "rate_limited";
+  else if (st === 529 || st >= 500) c = "overloaded";
+  return { code: c, status: st, message: String(msg).slice(0, 300) };
+}
+// Liste des modèles proposés par le service, lue avec la clé (elle sert aussi à vérifier la clé).
+async function listModels(p, key) {
+  const H = {
+    anthropic: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+    openai: { authorization: "Bearer " + key },
+    mistral: { authorization: "Bearer " + key },
+    gemini: {}
+  }[p];
+  const U = {
+    anthropic: "https://api.anthropic.com/v1/models?limit=100",
+    openai: "https://api.openai.com/v1/models",
+    mistral: "https://api.mistral.ai/v1/models",
+    gemini: "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=" + encodeURIComponent(key)
+  }[p];
+  let res;
+  try { res = await fetch(U, { headers: H }); }
+  catch (_) { throw { code: navigator.onLine ? "unreachable" : "offline" }; }
+  if (!res.ok) throw await httpError(res);
+  const j = await res.json();
+  const NOT_CHAT = /(embed|audio|realtime|tts|transcri|speech|whisper|dall-e|image|moderation|search|instruct|babbage|davinci|codex|computer-use|deep-research|ocr|codestral|devstral|voxtral|aqa|live|robotics|veo|imagen|lyria)/i;
+  let out = [];
+  if (p === "anthropic") out = (j.data || []).map(m => ({ id: m.id, label: m.display_name || m.id }));
+  else if (p === "openai") out = (j.data || []).filter(m => /^(gpt-|o\d|chatgpt-)/.test(m.id || "") && !NOT_CHAT.test(m.id))
+    .sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => ({ id: m.id, label: m.id }));
+  else if (p === "gemini") out = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent") && /gemini/.test(m.name || "") && !NOT_CHAT.test(m.name || ""))
+    .map(m => ({ id: String(m.name).replace(/^models\//, ""), label: m.displayName || m.name }));
+  else {
+    const seen = new Set();
+    for (const m of (j.data || [])) {
+      const c = m.capabilities || {};
+      if (!m.id || c.completion_chat === false || m.deprecation || NOT_CHAT.test(m.id)) continue;
+      const ids = [m.id, ...(Array.isArray(m.aliases) ? m.aliases : [])];
+      const id = ids.find(x => /-latest$/.test(x)) || m.id;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({ id, label: id, vision: c.vision === true ? true : c.vision === false ? false : null });
+    }
+    out.sort((a, b) => (/-latest$/.test(b.id) - /-latest$/.test(a.id)) || a.id.localeCompare(b.id));
+  }
+  return out.slice(0, 150);
+}
+// Une demande à l'IA choisie ; la réponse attendue est un objet JSON.
+async function askAI(prompt, opts = {}) {
+  const p = S.ai.provider, key = curKey(), model = opts.model || curModel();
+  if (!key) throw { code: "no_key" };
+  if (!navigator.onLine) throw { code: "offline" };
+  const imgs = [];
+  for (const img of opts.images || []) imgs.push({ type: ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(img.type) ? img.type : "image/jpeg", data: await blobToB64(img) });
+  const text = prompt + "\n\nRéponds uniquement par cet objet JSON, sans aucun texte avant ni après.";
+  const base = opts.maxTokens || 2500;
+  const headers = { "content-type": "application/json" };
+  let url, body;
+  if (p === "anthropic") {
+    url = "https://api.anthropic.com/v1/messages";
+    Object.assign(headers, { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" });
+    body = { model, max_tokens: base, messages: [{ role: "user", content: [...imgs.map(i => ({ type: "image", source: { type: "base64", media_type: i.type, data: i.data } })), { type: "text", text }] }] };
+  } else if (p === "openai") {
+    url = "https://api.openai.com/v1/responses";
+    headers.authorization = "Bearer " + key;
+    body = { model, input: [{ role: "user", content: [{ type: "input_text", text }, ...imgs.map(i => ({ type: "input_image", image_url: `data:${i.type};base64,${i.data}` }))] }],
+      max_output_tokens: Math.max(base * 3, 12000), text: { format: { type: "json_object" } } };
+  } else if (p === "gemini") {
+    url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+    body = { contents: [{ role: "user", parts: [...imgs.map(i => ({ inline_data: { mime_type: i.type, data: i.data } })), { text }] }],
+      generationConfig: { responseMimeType: "application/json", maxOutputTokens: Math.max(base * 3, 12000) } };
+  } else {
+    url = "https://api.mistral.ai/v1/chat/completions";
+    headers.authorization = "Bearer " + key;
+    body = { model, messages: [{ role: "user", content: imgs.length ? [{ type: "text", text }, ...imgs.map(i => ({ type: "image_url", image_url: `data:${i.type};base64,${i.data}` }))] : text }],
+      response_format: { type: "json_object" }, max_tokens: Math.max(base * 2, 4000) };
+  }
+  let res;
+  try { res = await fetch(url, { method: "POST", signal: opts.signal, headers, body: JSON.stringify(body) }); }
+  catch (e) {
     if (e && e.name === "AbortError") throw { code: "cancelled" };
     throw { code: "offline" };
   }
-  if (!res.ok) {
-    let msg = "";
-    try { const j = await res.json(); msg = (j && j.error && j.error.message) || ""; } catch (_) {}
-    const s = res.status;
-    throw { status: s, message: msg, code:
-      s === 401 ? "bad_key" : s === 403 ? "forbidden" : s === 413 ? "prompt_too_large" :
-      s === 429 ? "rate_limited" : (s === 529 || s >= 500) ? "overloaded" :
-      (s === 400 && /credit|balance|billing/i.test(msg)) ? "no_credit" :
-      (s === 400 && /too long|too large|exceed/i.test(msg)) ? "prompt_too_large" : "api_error" };
-  }
+  if (!res.ok) throw await httpError(res);
   const j = await res.json();
-  const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
-  const val = parseJsonLoose(text);
-  if (val === undefined) throw { code: "invalid_json", text };
+  let out = "";
+  if (p === "anthropic") out = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
+  else if (p === "openai") {
+    if (typeof j.output_text === "string" && j.output_text) out = j.output_text;
+    else for (const it of (j.output || [])) if (it && it.type === "message") for (const c of (it.content || [])) {
+      if (c.type === "output_text" && typeof c.text === "string") out += c.text;
+      else if (c.type === "refusal") throw { code: "refused" };
+    }
+  } else if (p === "gemini") {
+    if (j.promptFeedback && j.promptFeedback.blockReason) throw { code: "refused" };
+    const cand = (j.candidates || [])[0] || {};
+    if (/SAFETY|PROHIBITED|BLOCKLIST|RECITATION/.test(cand.finishReason || "")) throw { code: "refused" };
+    out = (((cand.content || {}).parts) || []).filter(x => typeof x.text === "string" && !x.thought).map(x => x.text).join("");
+  } else {
+    const msg = (((j.choices || [])[0]) || {}).message || {};
+    out = typeof msg.content === "string" ? msg.content
+      : Array.isArray(msg.content) ? msg.content.filter(x => x && x.type === "text").map(x => x.text).join("") : "";
+  }
+  const val = parseJsonLoose(out);
+  if (val === undefined) throw { code: "invalid_json", text: out };
   return val;
 }
 
@@ -1609,7 +1743,7 @@ async function dropJob(id) {
   try { await idbDel("jobs", id); } catch (_) {}
 }
 async function processQueue() {
-  if (S.queueRunning || !S.jobs.length || !S.apiKey || !navigator.onLine) return;
+  if (S.queueRunning || !S.jobs.length || !curKey() || !navigator.onLine) return;
   S.queueRunning = true;
   try {
     for (const job of [...S.jobs]) {
@@ -1698,7 +1832,7 @@ async function runSynth(id, fromQueue) {
   const b = S.books.get(id);
   if (!b) return "gone";
   if (S.synth) return "busy";
-  if (!S.apiKey) { if (!fromQueue) { S.synthMsg = { id, text: ERR.no_key, settings: true }; renderAll(); } return "nokey"; }
+  if (!curKey()) { if (!fromQueue) { S.synthMsg = { id, text: ERR.no_key, settings: true }; renderAll(); } return "nokey"; }
   if (!navigator.onLine) {
     if (!fromQueue) { await enqueue({ type: "synth", bookId: id }); toast(ERR.offline); }
     return "offline";
@@ -1706,9 +1840,10 @@ async function runSynth(id, fromQueue) {
   const ctl = new AbortController();
   S.synth = { id, ctl }; S.synthMsg = null; renderAll();
   try {
-    const r = await askClaude(buildPrompt(b), { signal: ctl.signal, maxTokens: 2500 });
+    const r = await askAI(buildPrompt(b), { signal: ctl.signal, maxTokens: 2500 });
     const syn = validateSynth(r, b);
     if (!syn) throw { code: "invalid_json" };
+    syn.by = { provider: S.ai.provider, model: curModel() };
     const cur = S.books.get(id);
     if (cur) {
       const nb = clone(cur); nb.synthesis = syn;
@@ -1793,7 +1928,7 @@ async function runThemeSynth(t, fromQueue) {
   const entries = t ? booksWithTheme(t) : [];
   if (!t || entries.length < 2) return "gone";
   if (S.tsynth) return "busy";
-  if (!S.apiKey) { if (!fromQueue) { S.tsynthMsg = { theme: t, text: ERR.no_key, settings: true }; renderAll(); } return "nokey"; }
+  if (!curKey()) { if (!fromQueue) { S.tsynthMsg = { theme: t, text: ERR.no_key, settings: true }; renderAll(); } return "nokey"; }
   if (!navigator.onLine) {
     if (!fromQueue) { await enqueue({ type: "theme", theme: t }); toast(ERR.offline); }
     return "offline";
@@ -1802,10 +1937,10 @@ async function runThemeSynth(t, fromQueue) {
   S.tsynth = { theme: t, ctl }; S.tsynthMsg = null; renderAll();
   try {
     const { prompt, refs } = themePrompt(t, entries);
-    const r = await askClaude(prompt, { signal: ctl.signal, maxTokens: 3500 });
+    const r = await askAI(prompt, { signal: ctl.signal, maxTokens: 3500 });
     const res = validateTheme(r, refs);
     if (!res) throw { code: "invalid_json" };
-    const doc = { kind: "theme", theme: t, result: res, at: new Date().toISOString(), basis: { ids: entries.map(e => e.id), sig: themeSig(t) } };
+    const doc = { kind: "theme", theme: t, result: res, at: new Date().toISOString(), by: { provider: S.ai.provider, model: curModel() }, basis: { ids: entries.map(e => e.id), sig: themeSig(t) } };
     S.tsynth = null;
     await saveDoc(themeDocId(t), doc);
     toast(fromQueue ? `Synthèse croisée établie pour « ${t} ».` : "Synthèse croisée établie.");
@@ -1825,7 +1960,7 @@ async function runThemeSynth(t, fromQueue) {
   }
 }
 
-/* ---------- photo d'une page : transcription par Claude ---------- */
+/* ---------- photo d'une page : transcription par l'IA ---------- */
 async function prepareImage(file) {
   try {
     const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -1930,17 +2065,23 @@ async function runOcr(file) {
   setThumb(img);
   const queueIt = async () => {
     await enqueue({ type: "ocr", bookId: c.bookId, blob: img });
-    setPhotoStatus("Pas de réseau : la photo est gardée et Claude la lira dès le retour de la connexion. Vous retrouverez la page dans la fiche, rubrique « Pages photographiées à trier ».");
+    setPhotoStatus("Pas de réseau : la photo est gardée et l'IA la lira dès le retour de la connexion. Vous retrouverez la page dans la fiche, rubrique « Pages photographiées à trier ».");
   };
-  if (!S.apiKey) {
+  if (!curKey()) {
     S.ocrCtl = null; $("#photo-stop").hidden = true;
     setPhotoStatus(`${esc(ERR.no_key)} <button class="link" type="button" data-act="settings">Ouvrir les réglages</button>`);
     return;
   }
+  const mInfo = (S.ai.lists[S.ai.provider] || []).find(x => x.id === curModel());
+  if (mInfo && mInfo.vision === false) {
+    S.ocrCtl = null; $("#photo-stop").hidden = true;
+    setPhotoStatus(`Le modèle ${esc(curModel())} ne lit pas les images. Choisissez-en un autre dans les réglages. <button class="link" type="button" data-act="settings">Ouvrir les réglages</button>`);
+    return;
+  }
   if (!navigator.onLine) { S.ocrCtl = null; $("#photo-stop").hidden = true; await queueIt(); return; }
-  setPhotoStatus(`<span class="pulse" aria-hidden="true"></span>Claude lit la page et cherche vos passages soulignés ou surlignés. Comptez de dix secondes à une minute.`);
+  setPhotoStatus(`<span class="pulse" aria-hidden="true"></span>${esc(AI())} lit la page et cherche vos passages soulignés ou surlignés. Comptez de dix secondes à une minute.`);
   try {
-    const r = await askClaude(ocrPrompt(b), { images: [img], signal: ctl.signal, maxTokens: 6000 });
+    const r = await askAI(ocrPrompt(b), { images: [img], signal: ctl.signal, maxTokens: 6000 });
     if (S.ocrCtl !== ctl) return;
     const o = validateOcr(r);
     if (!o) throw { code: "invalid_json" };
@@ -1958,7 +2099,7 @@ async function runOcrJob(job) {
   const b = S.books.get(job.bookId);
   if (!b || !job.blob) return "gone";
   try {
-    const r = await askClaude(ocrPrompt(b), { images: [job.blob], maxTokens: 6000 });
+    const r = await askAI(ocrPrompt(b), { images: [job.blob], maxTokens: 6000 });
     const o = validateOcr(r);
     if (!o) throw { code: "invalid_json" };
     const cur = S.books.get(job.bookId);
@@ -2039,8 +2180,8 @@ function bookXml(b, single) {
     if (s.citationCle) { x.push(wPara("Label", "Citation clé")); x.push(wPara("Quote", s.citationCle)); }
     if (s.aCreuser) x.push(wLabelled(null, "À creuser : ", s.aCreuser));
     const bs = s.basis || {};
-    x.push(wPara("Meta", `Établie par Claude le ${fmtDate(s.at)} à partir de ${plural(bs.quotes || 0, "citation")}, ${plural(bs.notes || 0, "note")} et ${plural(bs.sources || 0, "source externe", "sources externes")}.` +
-      (s.ouvrageConnu === false ? " Ouvrage inconnu de Claude : synthèse fondée sur la seule matière du lecteur." : "")));
+    x.push(wPara("Meta", `Établie par ${byLabel(s)} le ${fmtDate(s.at)} à partir de ${plural(bs.quotes || 0, "citation")}, ${plural(bs.notes || 0, "note")} et ${plural(bs.sources || 0, "source externe", "sources externes")}.` +
+      (s.ouvrageConnu === false ? " Ouvrage inconnu de l'IA : synthèse fondée sur la seule matière du lecteur." : "")));
   } else {
     x.push(wPara("Note", "Idée maîtresse pas encore établie."));
   }
@@ -2346,29 +2487,44 @@ $("#restore-input").addEventListener("change", async e => {
 
 /* ---------- réglages ---------- */
 async function saveKey() {
-  const inp = $("#api-key"), ks = $("#key-status");
+  const inp = $("#api-key"), ks = $("#key-status"), pv = S.ai.provider, P = PROVIDERS[pv];
   const v = inp.value.trim();
   delete inp.dataset.dirty;
   ks.dataset.locked = "1";
-  if (!v) { ks.className = "set-status bad"; ks.textContent = "Collez d'abord votre clé d'API."; return; }
-  if (!/^sk-ant-/.test(v)) { ks.className = "set-status bad"; ks.textContent = "Cette clé ne ressemble pas à une clé d'API Claude : elle commence d'habitude par « sk-ant- »."; return; }
-  S.apiKey = v; LS.set("cahier.apiKey", v);
-  if (!navigator.onLine) { ks.className = "set-status"; ks.textContent = "Clé enregistrée. Elle sera vérifiée au retour du réseau."; return; }
-  ks.className = "set-status"; ks.innerHTML = '<span class="pulse" aria-hidden="true"></span>Vérification auprès de Claude…';
+  const bad = t => { ks.className = "set-status bad"; ks.textContent = t; };
+  if (!v) return bad(`Collez d'abord votre clé ${P.name}.`);
+  if (pv === "anthropic" && !/^sk-ant-/.test(v)) return bad("Cette clé ne ressemble pas à une clé Claude : elle commence d'habitude par « sk-ant- ».");
+  if (pv === "openai" && !/^sk-/.test(v)) return bad("Cette clé ne ressemble pas à une clé OpenAI : elle commence d'habitude par « sk- ».");
+  S.ai.keys[pv] = v; saveAI();
+  if (!navigator.onLine) { ks.className = "set-status"; ks.textContent = "Clé enregistrée. Elle sera vérifiée au retour du réseau."; renderAll(); return; }
+  ks.className = "set-status"; ks.innerHTML = `<span class="pulse" aria-hidden="true"></span>Vérification auprès de ${esc(P.name)}…`;
   try {
-    await askClaude('Réponds par ce JSON : {"ok":true}', { maxTokens: 20, model: "claude-haiku-5-5" });
-    ks.className = "set-status ok"; ks.textContent = "Clé enregistrée et vérifiée.";
+    const list = await listModels(pv, v);
+    S.ai.lists[pv] = list;
+    if (!S.ai.models[pv] || (list.length && !list.some(m => m.id === S.ai.models[pv]))) S.ai.models[pv] = defaultModel(pv);
+    saveAI();
+    ks.className = "set-status ok";
+    ks.textContent = list.length ? `Clé enregistrée et vérifiée : ${plural(list.length, "modèle disponible", "modèles disponibles")}.` : "Clé enregistrée et vérifiée.";
     processQueue();
   } catch (e) {
-    ks.className = "set-status bad"; ks.textContent = e && e.code === "invalid_json" ? "Clé enregistrée et vérifiée." : `Clé enregistrée, mais la vérification a échoué : ${errText(e)}`;
-    if (e && e.code === "invalid_json") { ks.className = "set-status ok"; processQueue(); }
+    bad(`Clé enregistrée, mais la vérification a échoué : ${errText(e)}`);
   }
   renderAll();
 }
 $("#api-key").addEventListener("input", e => { e.target.dataset.dirty = "1"; delete $("#key-status").dataset.locked; });
-for (const r of document.querySelectorAll('input[name="model"]')) {
-  r.addEventListener("change", () => { if (MODELS.includes(r.value)) { S.model = r.value; LS.set("cahier.model", r.value); toast("Modèle enregistré."); } });
+for (const r of document.querySelectorAll('input[name="provider"]')) {
+  r.addEventListener("change", () => {
+    if (!PROVIDERS[r.value]) return;
+    S.ai.provider = r.value; saveAI();
+    const inp = $("#api-key");
+    delete inp.dataset.dirty; inp.value = curKey(); inp.type = "password"; $("#key-toggle").textContent = "Afficher";
+    delete $("#key-status").dataset.locked;
+    renderAll();
+    toast(`IA choisie : ${AI()}.`);
+    processQueue();
+  });
 }
+$("#ai-model").addEventListener("change", e => { S.ai.models[S.ai.provider] = e.target.value; saveAI(); renderSettings(); toast("Modèle enregistré."); });
 
 /* ---------- menus ---------- */
 const sheetItem = (act, label, sub, cls) => `<button class="sheet-item${cls ? " " + cls : ""}" data-act="${act}"><span>${esc(label)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</span></button>`;
@@ -2376,7 +2532,7 @@ function openActions(html) { $("#actions-box").innerHTML = html; openModal("#m-a
 function closeActions() { closeModal("#m-actions"); S.restore = null; }
 function homeMenu() {
   const it = [`<h2 class="sheet-title">Cahier de lecture</h2>`];
-  it.push(sheetItem("settings", "Réglages", S.apiKey ? "Clé d'API, modèle, données, installation" : "Ajoutez votre clé d'API Claude"));
+  it.push(sheetItem("settings", "Réglages", curKey() ? `${AI()} · modèle, données, installation` : "Choisissez votre IA et ajoutez sa clé"));
   it.push(sheetItem("share-all", "Partager le cahier en Word", "Toutes les fiches, un sommaire et les thèmes croisés"));
   it.push(sheetItem("export", "Exporter en Markdown", "Texte simple, lisible partout"));
   it.push(sheetItem("backup", "Sauvegarder le cahier", "Un fichier .json à garder en lieu sûr"));
@@ -2411,7 +2567,7 @@ async function deleteBook(id) {
   } catch (_) { toast("La suppression a échoué. Recommencez."); }
 }
 async function shareApp() {
-  const data = { title: "Cahier de lecture", text: "Mon cahier de lecture sur téléphone : citations, notes, photos de pages et l'idée maîtresse de chaque livre par Claude. Fonctionne hors ligne, sur Android et iPhone. Chacun a son propre cahier, privé.", url: APP_URL };
+  const data = { title: "Cahier de lecture", text: "Mon cahier de lecture sur téléphone : citations, notes, photos de pages et l'idée maîtresse de chaque livre par l'IA de votre choix (Claude, ChatGPT, Gemini ou Mistral). Fonctionne hors ligne, sur Android et iPhone. Chacun a son propre cahier, privé.", url: APP_URL };
   try { if (navigator.share) { await navigator.share(data); return; } } catch (e) { if (e && e.name === "AbortError") return; }
   try { await navigator.clipboard.writeText(APP_URL); toast("Lien copié : collez-le dans un message."); }
   catch (_) { toast(`Lien de l'application : ${APP_URL}`); }
@@ -2550,12 +2706,12 @@ document.addEventListener("click", e => {
       break;
     }
     case "key-clear": armOrRun(el, () => {
-      S.apiKey = ""; LS.del("cahier.apiKey"); $("#api-key").value = ""; delete $("#key-status").dataset.locked;
+      delete S.ai.keys[S.ai.provider]; delete S.ai.lists[S.ai.provider]; saveAI(); $("#api-key").value = ""; delete $("#key-status").dataset.locked;
       renderAll(); toast("Clé effacée de ce téléphone.");
     }, "Confirmer l'effacement"); break;
     case "queue-run":
       if (!S.jobs.length) toast("Aucune demande en attente.");
-      else if (!S.apiKey) toast(ERR.no_key);
+      else if (!curKey()) toast(ERR.no_key);
       else if (!navigator.onLine) toast("Toujours pas de réseau. Les demandes partiront dès son retour.");
       else processQueue();
       break;

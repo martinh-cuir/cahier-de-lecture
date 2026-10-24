@@ -1,7 +1,7 @@
 /* Cahier de lecture : service worker.
    Garde l'application dans le téléphone pour qu'elle s'ouvre sans réseau.
    Changer VERSION à chaque mise à jour publiée. */
-const VERSION = "cahier-1.1.0";
+const VERSION = "cahier-1.2.0";
 const SHELL = [
   "./",
   "./index.html",
