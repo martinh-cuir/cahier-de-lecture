@@ -1,0 +1,20 @@
+{
+  "name": "Cahier de lecture",
+  "short_name": "Cahier",
+  "description": "Vos lectures, citations et notes, avec l'idée maîtresse de chaque livre établie par Claude. Fonctionne hors ligne.",
+  "lang": "fr",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#22261A",
+  "theme_color": "#22261A",
+  "categories": ["books", "education", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

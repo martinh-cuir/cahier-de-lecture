@@ -1,0 +1,2540 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cahier de lecture</title>
+<meta name="description" content="Vos lectures, citations et notes, avec l'idée maîtresse de chaque livre établie par Claude. Fonctionne hors ligne.">
+<meta name="theme-color" content="#22261A">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* Layout : un cahier de lecture tenu au téléphone, installé comme application. Chaque livre a son dos relié (couleur selon le type, titre lu de bas en haut, comme sur les rayonnages français) ; une barre fixe en bas porte la navigation, ou les gestes d'écriture quand une fiche est ouverte. */
+:root{
+  /* Parti pris : une seule ambiance, vert olive foncé, quel que soit le thème de l'appareil. */
+  --paper:#22261A; --card:#2D3222; --ink:#ECEAD9; --ink-soft:#B2B49A; --rule:#464C33;
+  --green:#B4BD78; --green-ink:#1B1E11; --green-tint:#3A4126;
+  --margin-red:#C9775F; --mark:rgba(214,188,78,.36); --warn:#E2B85C; --warn-tint:#463C1C;
+  --scrim:rgba(0,0,0,.62);
+  --shadow:0 1px 0 rgba(0,0,0,.28), 0 10px 22px -16px rgba(0,0,0,.85);
+  /* Reliures : bronze pour les essais, brique pour la littérature, ardoise pour le reste */
+  --cv-e1:#7C6A39; --cv-e2:#6E5D30; --cv-e3:#8A7643; --cv-e4:#635428;
+  --cv-l1:#7D4234; --cv-l2:#6E392D; --cv-l3:#8A4C3C; --cv-l4:#623026;
+  --cv-a1:#4C5D66; --cv-a2:#43525A; --cv-a3:#566A74; --cv-a4:#3B4850;
+  --cv-ink:#F1EAD6; --cv-gild:rgba(241,234,214,.5);
+  color-scheme:dark;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-ui:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"Courier Prime", "Courier New", ui-monospace, monospace;
+  --s-xs:.78rem; --s-sm:.875rem; --s-md:1rem; --s-lg:1.2rem; --s-xl:1.4rem;
+  --r:6px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
+body.locked{overflow:hidden}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 120px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+svg{flex:none}
+
+/* ---------- type ---------- */
+.brand{font-family:var(--f-display);font-variation-settings:"opsz" 72;font-weight:600;font-size:clamp(1.9rem,6.6vw,2.7rem);line-height:1.08;letter-spacing:-.012em;margin:.1rem 0 .4rem;text-wrap:balance}
+.brand::after{content:"";display:block;width:2.4rem;height:2px;background:var(--margin-red);margin-top:.5rem}
+.tally{font-family:var(--f-mono);font-size:var(--s-sm);color:var(--ink-soft);margin:0;font-variant-numeric:tabular-nums}
+.label{font-family:var(--f-mono);font-size:var(--s-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:0;font-weight:400}
+
+/* ---------- controls ---------- */
+input,select,textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:.6rem .75rem;width:100%;min-width:0}
+textarea{resize:vertical;min-height:4.6rem;line-height:1.55}
+input::placeholder,textarea::placeholder{color:var(--ink-soft);opacity:.85}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-offset:0;border-color:transparent}
+.btn{font:inherit;font-weight:700;font-size:var(--s-sm);line-height:1.2;padding:.65rem 1rem;min-height:44px;border-radius:var(--r);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;white-space:nowrap;text-decoration:none}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--green);color:var(--green-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn.ghost:hover{border-color:var(--ink-soft)}
+.btn.small{min-height:38px;padding:.45rem .8rem}
+.btn:disabled{opacity:.55;cursor:default;filter:none}
+.link{font:inherit;font-size:var(--s-sm);font-weight:700;background:none;border:0;padding:.35rem 0;color:var(--green);cursor:pointer;text-align:left}
+.link.danger{color:var(--margin-red)}
+.link.armed{color:var(--margin-red);text-decoration:underline}
+.plain{all:unset;cursor:pointer}
+.plain:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn:hover{border-color:var(--ink-soft)}
+
+/* ---------- accueil ---------- */
+.masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:14px}
+.masthead > div{min-width:0}
+.notice{margin:0 0 16px;padding:12px 14px;border-radius:var(--r);background:var(--warn-tint);color:var(--ink);font-size:var(--s-sm)}
+.notice > div{display:grid;gap:8px}
+.notice p{margin:0;max-width:62ch}
+.notice .link{justify-self:start;color:var(--warn)}
+.ask{font-family:var(--f-mono);font-size:var(--s-xs);background:var(--paper);padding:.6rem .7rem;border-radius:4px;overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;margin:0}
+
+.current{margin:0 0 16px;padding:14px;background:var(--card);border:1px solid var(--rule);border-radius:8px;display:grid;gap:12px;box-shadow:var(--shadow);max-width:640px}
+.current-card{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.current-info{min-width:0;display:grid;gap:3px}
+.current-title{font-family:var(--f-display);font-weight:600;font-size:1.18rem;line-height:1.25;margin:.1rem 0 0;overflow-wrap:anywhere;text-wrap:balance}
+.current-actions{display:flex;gap:8px}
+.current-actions > *{flex:1 1 0;min-width:0;padding-inline:.5rem}
+.also{margin:0;font-size:var(--s-sm);color:var(--ink-soft)}
+.also .link{padding:0}
+
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);display:grid;gap:10px;padding-block:8px 12px;border-bottom:1px solid var(--rule)}
+.searchrow{display:flex;gap:8px}
+.searchrow input{flex:1}
+.sort{width:auto;max-width:10.5rem;flex:none;padding-right:.4rem}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+.fchip{flex:none;font:inherit;font-size:var(--s-sm);padding:.32rem .75rem;min-height:36px;border-radius:999px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.fchip .n{font-family:var(--f-mono);font-size:var(--s-xs);opacity:.75;margin-left:.35em;font-variant-numeric:tabular-nums}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr));gap:14px;margin-top:16px;align-items:start}
+
+/* ---------- couvertures et dos ---------- */
+.cover-wrap{position:relative;display:inline-block;flex:none;line-height:0}
+.cover{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:space-between;background:var(--cv);color:var(--cv-ink);border-radius:2px 5px 5px 2px;box-shadow:inset 4px 0 0 rgba(0,0,0,.22), inset 5px 0 0 rgba(255,255,255,.06), 0 6px 14px -8px rgba(0,0,0,.9);overflow:hidden;line-height:1.2}
+.cover-xs{width:40px;height:58px;padding:7px 4px 5px 8px}
+.cover-sm{width:64px;height:92px;padding:9px 6px 7px 10px}
+.cover-md{width:78px;height:112px;padding:11px 7px 8px 12px}
+.cover-band{display:block;height:4px;border-top:1px solid var(--cv-gild);border-bottom:1px solid var(--cv-gild);margin-bottom:6px}
+.cover-title{font-family:var(--f-display);font-weight:600;font-size:.66rem;line-height:1.18;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.cover-md .cover-title{font-size:.74rem}
+.cover-author{font-family:var(--f-mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cover-md .cover-author{font-size:.56rem}
+.tail{position:absolute;z-index:0;left:56%;bottom:-16px;width:10px;height:30px;background:var(--margin-red);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%)}
+
+/* ---------- fiche (carte) ---------- */
+.fiche{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr);min-height:150px;background:var(--card);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);min-width:0}
+.fiche:hover{border-color:var(--ink-soft)}
+.fiche:focus-within{outline:2px solid var(--green);outline-offset:2px}
+.spine{position:relative;background:var(--cv);color:var(--cv-ink);border-radius:3px 0 0 3px;box-shadow:inset -3px 0 0 rgba(0,0,0,.2)}
+.spine::before,.spine::after{content:"";position:absolute;left:5px;right:5px;height:4px;border-top:1px solid var(--cv-gild);border-bottom:1px solid var(--cv-gild)}
+.spine::before{top:7px}
+.spine::after{bottom:34px}
+.spine-title{position:absolute;inset:18px 0 44px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.spine-title span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:100%;font-family:var(--f-display);font-weight:600;font-size:.78rem;letter-spacing:.02em}
+.spine-cote{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-family:var(--f-mono);font-size:.52rem;line-height:1.15;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.fiche-body{padding:12px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.fiche-head{display:flex;align-items:center;gap:8px;min-height:24px;padding-bottom:7px;margin-bottom:4px;border-bottom:1.5px solid var(--margin-red)}
+.has-ribbon .fiche-head{padding-right:56px}
+.has-ribbon .fiche-title{padding-right:36px}
+.fiche-title{font-family:var(--f-display);font-size:var(--s-lg);font-weight:600;line-height:1.25;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.stretch{all:unset;cursor:pointer}
+.stretch::after{content:"";position:absolute;inset:0}
+.fiche-author{margin:0;color:var(--ink-soft);font-size:var(--s-sm)}
+.pub{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fiche-idea{font-family:var(--f-display);font-size:1rem;line-height:1.55;margin:.3rem 0 0;overflow-wrap:anywhere}
+.fiche-idea.muted{font-style:italic;color:var(--ink-soft)}
+.fiche-foot{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding-top:6px}
+.counts{font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft);font-variant-numeric:tabular-nums;margin:0}
+.chips{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative;z-index:1;font:inherit;font-size:var(--s-xs);padding:.2rem .6rem;min-height:28px;border-radius:3px;border:1px solid var(--rule);background:transparent;color:var(--ink-soft);cursor:pointer}
+.chip:hover{color:var(--ink);border-color:var(--ink-soft)}
+span.chip{cursor:default;display:inline-flex;align-items:center}
+.chip.add{border-style:dashed;color:var(--green);border-color:var(--green)}
+.chip.done{color:var(--ink-soft);border-style:solid;cursor:default}
+.pill{font-family:var(--f-mono);font-size:var(--s-xs);padding:.08rem .5rem;border-radius:999px;border:1px solid var(--rule);color:var(--ink-soft);white-space:nowrap}
+.pill.en-cours{background:var(--green-tint);border-color:transparent;color:var(--green)}
+.pill.lu{background:var(--green);border-color:var(--green);color:var(--green-ink)}
+.stale{font-family:var(--f-mono);font-size:var(--s-xs);background:var(--warn-tint);color:var(--warn);padding:.1rem .45rem;border-radius:3px;white-space:nowrap}
+.fiche.example{border-style:dashed;box-shadow:none}
+.tag-ex{font-family:var(--f-mono);font-size:var(--s-xs);color:var(--margin-red);letter-spacing:.06em;text-transform:uppercase}
+/* Signet : ruban de soie qui dépasse en haut de la fiche, avec le mois et l'année de lecture */
+.ribbon{position:absolute;top:-1px;right:14px;z-index:2;width:46px;padding:7px 3px 15px;background:var(--margin-red);color:var(--green-ink);font-family:var(--f-mono);font-size:.7rem;font-weight:700;line-height:1.2;text-align:center;font-variant-numeric:tabular-nums;clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 9px),0 100%);pointer-events:none}
+.ribbon span{display:block}
+
+.empty{margin-top:8px;padding:20px 18px;border:1px solid var(--rule);border-radius:6px;background:var(--card);display:grid;gap:10px;max-width:640px}
+.empty h2{font-family:var(--f-display);font-weight:600;font-size:var(--s-xl);line-height:1.25;margin:0}
+.empty p{margin:0;max-width:62ch}
+.empty .btn{justify-self:start}
+.section-label{margin-top:28px}
+.loading{margin-top:22px;color:var(--ink-soft);font-family:var(--f-mono);font-size:var(--s-sm)}
+
+/* ---------- fiche ouverte ---------- */
+.detail{max-width:700px;margin:0 auto}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);display:flex;justify-content:space-between;align-items:center;gap:8px;padding-block:6px 8px;border-bottom:1px solid var(--rule)}
+.topbar .btn{max-width:70%;overflow:hidden;text-overflow:ellipsis;justify-content:flex-start}
+.d-top{display:flex;gap:16px;align-items:flex-start;padding-top:18px}
+.d-top-info{min-width:0;flex:1;display:grid;gap:5px}
+.d-meta{margin:0;font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.signet{color:var(--margin-red)}
+.d-title{font-family:var(--f-display);font-variation-settings:"opsz" 60;font-weight:600;font-size:clamp(1.4rem,5.4vw,2.1rem);line-height:1.15;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.d-author{margin:0;color:var(--ink-soft)}
+.d-themes{margin-top:18px}
+.segctl{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:3px;gap:3px;margin-top:16px;max-width:420px}
+.segctl button{border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:var(--s-sm);font-weight:700;border-radius:999px;min-height:38px;cursor:pointer}
+.segctl button[aria-checked="true"]{background:var(--green);color:var(--green-ink)}
+
+.idea{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:16px 18px 16px;margin-top:16px;box-shadow:var(--shadow)}
+.idea-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.idea-sentence{font-family:var(--f-display);font-weight:600;font-size:1.28rem;line-height:1.38;margin:.55rem 0 .4rem;text-wrap:pretty}
+.idea-more{padding-top:.5rem}
+.idea-dev{font-family:var(--f-display);line-height:1.68;margin:0 0 1rem;max-width:65ch}
+.idea h3{margin:1rem 0 .4rem}
+.points{margin:0;padding-left:1.15rem;display:grid;gap:.35rem;line-height:1.55}
+.key-quote{margin:1rem 0 0}
+.key-quote figcaption{margin-top:.3rem}
+.key-quote figcaption .link{font-family:var(--f-mono);font-weight:400;font-size:var(--s-xs);padding:0}
+.dig{margin:1rem 0 0;padding-top:.8rem;border-top:1px dashed var(--rule);line-height:1.55}
+.dig .label{display:block;margin-bottom:.2rem}
+.kw{margin-top:1rem;display:grid;gap:.4rem}
+.prov{margin:1rem 0 0;font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft);line-height:1.5}
+.caution{margin:.8rem 0 0;padding:.6rem .75rem;border-radius:var(--r);background:var(--warn-tint);color:var(--ink);font-size:var(--s-sm)}
+.idea-empty{margin:.6rem 0 0;color:var(--ink-soft);max-width:60ch}
+.synth-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:12px}
+.synth-status{flex-basis:100%;margin:0;font-size:var(--s-sm);color:var(--ink-soft)}
+.synth-status:empty{display:none}
+.pulse{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--green);margin-right:.4rem;vertical-align:middle;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+blockquote{margin:0;font-family:var(--f-display);font-size:1.04rem;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.hl{background:linear-gradient(transparent 14%, var(--mark) 14%, var(--mark) 90%, transparent 90%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .12em}
+
+.tabs{display:flex;gap:2px;margin-top:26px;border-bottom:1px solid var(--rule);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;padding:.6rem .8rem;min-height:44px;font:inherit;font-weight:700;color:var(--ink-soft);cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--green)}
+.tab .n{font-family:var(--f-mono);font-weight:400;margin-left:.3em;font-variant-numeric:tabular-nums}
+.panel-actions{padding:14px 0 2px}
+.research{margin:16px 0 0;padding:10px 14px;border:1px solid var(--rule);border-radius:var(--r);font-size:var(--s-sm)}
+.research summary{cursor:pointer;font-weight:700;color:var(--green);padding:.3rem 0}
+.research-body{display:grid;gap:8px;padding:6px 0 4px}
+.research-body p{margin:0}
+.research .link{justify-self:start}
+
+.items{list-style:none;margin:0;padding:0}
+.item{padding:16px 0;border-bottom:1px solid var(--rule);display:grid;gap:6px;min-width:0}
+.item:last-child{border-bottom:0}
+.item-meta{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.item-actions{display:flex;gap:18px}
+.text{white-space:pre-wrap;margin:0;line-height:1.6;overflow-wrap:anywhere}
+.q-comment{margin:0;color:var(--ink-soft);font-size:var(--s-sm);white-space:pre-wrap;overflow-wrap:anywhere}
+.src-label{font-weight:700;margin:0;overflow-wrap:anywhere}
+.src-url{font-size:var(--s-sm);color:var(--green);overflow-wrap:anywhere}
+details.excerpt summary{cursor:pointer;font-size:var(--s-sm);color:var(--green);font-weight:700}
+details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
+.none{color:var(--ink-soft);font-size:var(--s-sm);padding:16px 0;margin:0}
+
+/* ---------- thèmes ---------- */
+.intro{margin:0 0 4px;color:var(--ink-soft);max-width:60ch}
+.theme-list{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px;max-width:700px}
+.theme-row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 14px;align-items:center;text-align:left;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;color:var(--ink);font:inherit;cursor:pointer}
+.theme-row:hover{border-color:var(--ink-soft)}
+.theme-name{font-family:var(--f-display);font-weight:600;font-size:1.12rem;line-height:1.3;overflow-wrap:anywhere}
+.theme-sub{font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mini-shelf{grid-column:2;grid-row:1 / span 2;display:flex;gap:2px;align-items:flex-end;height:34px}
+.mini-shelf i{display:block;width:8px;border-radius:1px;background:var(--cv);box-shadow:inset -1px 0 0 rgba(0,0,0,.25)}
+.theme-head{padding-top:18px;display:grid;gap:4px}
+.tb-list{list-style:none;margin:8px 0 0;padding:0}
+.tb-row{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start;background:none;border:0;border-bottom:1px solid var(--rule);padding:12px 0;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.tb-info{display:grid;gap:2px;min-width:0}
+.tb-title{font-family:var(--f-display);font-weight:600;font-size:1.05rem;line-height:1.3;overflow-wrap:anywhere}
+.tb-author{font-size:var(--s-sm);color:var(--ink-soft)}
+.tb-idea{font-family:var(--f-display);font-size:.95rem;line-height:1.5;margin-top:2px;overflow-wrap:anywhere}
+.tb-idea.muted{font-style:italic;color:var(--ink-soft)}
+
+/* ---------- barres du bas ---------- */
+.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);border-top:1px solid var(--rule);padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar-inner{max-width:520px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.nav-item{background:none;border:0;color:var(--ink-soft);font:inherit;font-size:var(--s-xs);font-weight:700;display:grid;justify-items:center;gap:2px;padding:4px 0;min-height:50px;cursor:pointer}
+.nav-item svg{width:24px;height:24px}
+.nav-item[aria-current="page"]{color:var(--green)}
+.nav-add{width:58px;height:58px;border-radius:50%;background:var(--green);color:var(--green-ink);border:0;display:grid;place-items:center;margin-top:-24px;box-shadow:0 8px 18px -8px rgba(0,0,0,.9), 0 0 0 5px var(--paper);cursor:pointer}
+.nav-add svg{width:28px;height:28px}
+.nav-add:disabled{opacity:.6;cursor:default}
+.actionbar .bar-inner{display:flex;gap:6px}
+.act{flex:1 1 0;min-width:0;display:grid;justify-items:center;gap:3px;background:none;border:0;border-radius:8px;color:var(--ink);font:inherit;font-size:var(--s-xs);font-weight:700;padding:6px 4px;min-height:54px;cursor:pointer;text-align:center}
+.act svg{width:24px;height:24px}
+.act.primary{color:var(--green)}
+.act:hover{background:var(--green-tint)}
+
+/* ---------- fenêtres ---------- */
+.modal{position:fixed;inset:0;z-index:25;background:var(--scrim);display:flex;justify-content:center;align-items:stretch}
+.modal-box{background:var(--paper);color:var(--ink);width:100%;max-width:600px;height:100%;overflow:auto;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.modal-head{position:sticky;top:0;z-index:2;background:var(--paper);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--rule)}
+.modal-head h2{font-family:var(--f-display);font-size:1.05rem;font-weight:600;margin:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.modal-head > :first-child{justify-self:start}
+.modal-head > :last-child{justify-self:end}
+.modal-body{padding:16px max(16px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:14px;align-content:start}
+.mc-book{margin:0;font-family:var(--f-display);font-style:italic;color:var(--ink-soft);overflow-wrap:anywhere}
+.grp{display:grid;gap:10px}
+.grp textarea{min-height:8.5rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row > *{flex:1 1 9rem}
+.row > .page{flex:0 0 6.5rem}
+.draft-note{margin:0;font-family:var(--f-mono);font-size:var(--s-xs);color:var(--warn)}
+@media (min-width:640px){.modal{align-items:center;padding:24px}.modal-box{height:auto;max-height:100%;border:1px solid var(--rule);border-radius:10px}.modal-head{padding-top:10px}}
+
+.field{display:grid;gap:4px}
+.field > label,.seg legend,.datefield legend{font-size:var(--s-sm);font-weight:700}
+.authorrow{display:grid;grid-template-columns:minmax(0,1fr) 7.5rem;gap:10px}
+.authorrow > *{min-width:0}
+.seg{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.seg legend{margin-bottom:6px;padding:0}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;width:1px;height:1px}
+.opt span{display:inline-flex;align-items:center;min-height:40px;padding:.4rem .9rem;border:1px solid var(--rule);border-radius:999px;cursor:pointer;font-size:var(--s-sm)}
+.opt input:checked + span{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.opt input:focus-visible + span{outline:2px solid var(--green);outline-offset:2px}
+.datefield{border:0;padding:0;margin:0;display:grid;gap:4px;min-width:0}
+.datefield legend{padding:0;margin-bottom:4px}
+.dategrid{display:grid;grid-template-columns:minmax(0,1fr) 6.5rem;gap:8px}
+.form-error{margin:0;color:var(--margin-red);font-size:var(--s-sm)}
+.form-error:empty{display:none}
+.help{margin:0;font-size:var(--s-sm);color:var(--ink-soft)}
+
+.overlay{position:fixed;inset:0;z-index:28;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);color:var(--ink);width:100%;max-width:520px;max-height:88%;overflow:auto;border-radius:14px 14px 0 0;padding:16px max(18px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:grid;gap:2px;box-shadow:var(--shadow)}
+.sheet-title{font-family:var(--f-display);font-weight:600;font-size:var(--s-lg);margin:0 0 6px}
+.sheet-text{margin:4px 0;font-size:var(--s-sm)}
+.sheet-item{display:flex;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);color:var(--ink);font:inherit;font-weight:700;padding:12px 2px;min-height:56px;cursor:pointer}
+.sheet-item:last-child{border-bottom:0}
+.sheet-item .sub{display:block;font-weight:400;font-size:var(--s-xs);color:var(--ink-soft);margin-top:2px}
+.sheet-item.danger{color:var(--margin-red)}
+.sheet-item.armed{text-decoration:underline}
+.sheet-item.muted{color:var(--ink-soft);justify-content:center}
+.plan{margin:6px 0 10px;padding-left:1.1rem;font-size:var(--s-sm);display:grid;gap:4px}
+.sheet-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px}
+@media (min-width:640px){.overlay{align-items:center}.sheet{border-radius:12px}}
+
+.toast{position:fixed;z-index:40;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(86px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:480px;background:var(--ink);color:var(--paper);padding:.7rem 1rem;border-radius:var(--r);font-size:var(--s-sm);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.toast-act{font:inherit;font-weight:700;background:none;border:0;color:var(--green-tint);text-decoration:underline;cursor:pointer;padding:.2rem 0;flex:none}
+
+/* ---------- photo d'une page ---------- */
+.photo{border:1px solid var(--rule);border-radius:var(--r);background:var(--card);padding:12px;display:grid;gap:12px;min-width:0}
+.photo-head{display:flex;gap:12px;align-items:flex-start}
+.photo-head img{width:60px;height:80px;object-fit:cover;border-radius:3px;border:1px solid var(--rule);flex:none;background:var(--paper)}
+.photo-head > div{min-width:0;display:grid;gap:4px;flex:1}
+.photo-status{margin:0;font-size:var(--s-sm);line-height:1.45}
+.photo-actions{display:flex;gap:16px;flex-wrap:wrap}
+.picks{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.pick{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:10px 12px;display:grid;gap:6px;min-width:0}
+.pick-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft)}
+.pick .link{font-family:var(--f-ui)}
+.transcript summary{cursor:pointer;font-weight:700;font-size:var(--s-sm);color:var(--green);padding:.2rem 0}
+.transcript-body{display:grid;gap:10px;margin-top:8px}
+.transcript-text{display:grid;gap:12px;font-family:var(--f-display);line-height:1.6;-webkit-user-select:text;user-select:text}
+.para p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.para .link{-webkit-user-select:none;user-select:none;font-family:var(--f-ui);font-size:var(--s-xs)}
+.used{font-family:var(--f-mono);font-size:var(--s-xs);color:var(--green)}
+.photo-entry{display:flex}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- application : compléments ---------- */
+.queue-note{margin:6px 0 0;font-family:var(--f-mono);font-size:var(--s-xs);color:var(--warn)}
+.queue-note:empty{display:none}
+.welcome{margin-top:8px;padding:18px;border:1px solid var(--rule);border-radius:8px;background:var(--card);display:grid;gap:14px;max-width:640px}
+.welcome h2{font-family:var(--f-display);font-weight:600;font-size:var(--s-xl);line-height:1.25;margin:0}
+.welcome p{margin:0;max-width:62ch}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:step}
+.steps li{display:grid;grid-template-columns:2rem minmax(0,1fr);gap:4px 10px;align-items:start;counter-increment:step}
+.steps li::before{content:counter(step);grid-row:span 2;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--green-tint);color:var(--green);font-family:var(--f-mono);font-weight:700}
+.steps strong{display:block}
+.steps .help{grid-column:2}
+.steps .btn,.steps label.btn{grid-column:2;justify-self:start;margin-top:4px}
+.inbox{margin-top:16px;padding:12px 14px;border:1px dashed var(--warn);border-radius:6px;display:grid;gap:6px}
+.inbox ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.inbox li{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding:6px 0}
+.inbox li:last-child{border-bottom:0}
+.inbox .meta{font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft)}
+.photo-entry{display:flex;gap:8px;flex-wrap:wrap}
+.settings{display:grid;gap:18px;padding-top:18px;max-width:640px}
+.set-card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px;display:grid;gap:10px}
+.set-card h2{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0}
+.set-card p{margin:0}
+.key-row{display:flex;gap:8px}
+.key-row input{flex:1;font-family:var(--f-mono);font-size:.9rem}
+.set-actions{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center}
+.set-status{margin:0;font-size:var(--s-sm);color:var(--ink-soft)}
+.set-status.ok{color:var(--green)}
+.set-status.bad{color:var(--margin-red)}
+.models{border:0;padding:0;margin:0;display:grid;gap:8px}
+.model{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:start;padding:10px 12px;border:1px solid var(--rule);border-radius:6px;cursor:pointer}
+.model input{margin:.2rem 0 0;width:auto;accent-color:var(--green)}
+.model span{font-weight:700}
+.model small{grid-column:2;color:var(--ink-soft);font-size:var(--s-sm)}
+.model:has(input:checked){border-color:var(--green);background:var(--green-tint)}
+.version{font-family:var(--f-mono);font-size:var(--s-xs);color:var(--ink-soft);margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ======================= CAHIER ======================= -->
+  <main id="v-home">
+    <header class="masthead">
+      <div>
+        <h1 class="brand">Cahier de lecture</h1>
+        <p class="tally" id="tally">Ouverture de votre cahier…</p>
+        <p class="queue-note" id="queue-note"></p>
+      </div>
+      <button class="icon-btn" id="menu-home" data-act="menu-home" aria-label="Réglages, partage, sauvegarde" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+    </header>
+
+    <div class="notice" id="storage-notice" hidden>
+      <div><p>Le stockage du téléphone n'est pas accessible : vos fiches ne pourront pas être enregistrées. Vérifiez que Chrome n'est pas en navigation privée, puis rouvrez l'application.</p></div>
+    </div>
+
+    <section id="current" aria-label="Ma lecture en cours"></section>
+
+    <div class="toolbar" id="toolbar" hidden>
+      <div class="searchrow">
+        <label class="sr" for="search">Rechercher un livre, un auteur, une idée ou une année</label>
+        <input id="search" type="search" placeholder="Titre, auteur, idée, année…" autocomplete="off">
+        <label class="sr" for="sort">Trier les livres</label>
+        <select id="sort" class="sort">
+          <option value="recent">Récents</option>
+          <option value="read">Date de lecture</option>
+          <option value="pub">Parution</option>
+          <option value="title">Titre</option>
+          <option value="author">Auteur</option>
+        </select>
+      </div>
+      <div class="filters" role="group" aria-label="Avancement">
+        <button class="fchip" data-status="all" aria-pressed="true">Tous<span class="n" id="c-all"></span></button>
+        <button class="fchip" data-status="en-cours" aria-pressed="false">En cours<span class="n" id="c-en-cours"></span></button>
+        <button class="fchip" data-status="lu" aria-pressed="false">Lus<span class="n" id="c-lu"></span></button>
+        <button class="fchip" data-status="a-lire" aria-pressed="false">À lire<span class="n" id="c-a-lire"></span></button>
+      </div>
+    </div>
+
+    <div id="shelf"></div>
+  </main>
+
+  <!-- ======================= THÈMES ======================= -->
+  <main id="v-themes" hidden>
+    <header class="masthead">
+      <div>
+        <h1 class="brand">Thèmes croisés</h1>
+        <p class="tally" id="themes-tally"></p>
+      </div>
+    </header>
+    <p class="intro">Les thèmes de vos fiches, et les livres qui les partagent. Ouvrez un thème pour faire dialoguer ces lectures.</p>
+    <div id="themes-list"></div>
+  </main>
+
+  <section class="detail" id="v-theme" hidden aria-label="Thème">
+    <div class="topbar"><button class="btn ghost small" data-act="back">← Thèmes</button></div>
+    <div id="theme-body"></div>
+  </section>
+
+  <!-- ======================= RÉGLAGES ======================= -->
+  <section class="detail" id="v-settings" hidden aria-label="Réglages">
+    <div class="topbar"><button class="btn ghost small" data-act="back">← Cahier</button></div>
+    <div class="settings">
+      <h1 class="brand">Réglages</h1>
+
+      <section class="set-card" aria-labelledby="set-key-title">
+        <h2 id="set-key-title">Clé d'API Claude</h2>
+        <p class="help">Elle permet l'idée maîtresse, la lecture des photos et les thèmes croisés. Créez-la sur la console Claude (platform.claude.com, rubrique API Keys). Elle reste dans ce téléphone et n'est envoyée qu'à Anthropic. L'usage est facturé sur votre compte API, en dehors de votre abonnement Claude.</p>
+        <label class="sr" for="api-key">Clé d'API</label>
+        <div class="key-row">
+          <input id="api-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+          <button class="btn ghost small" type="button" data-act="key-toggle" id="key-toggle">Afficher</button>
+        </div>
+        <div class="set-actions">
+          <button class="btn primary small" type="button" data-act="key-save">Enregistrer et vérifier</button>
+          <button class="link danger" type="button" data-act="key-clear" id="key-clear">Effacer la clé</button>
+        </div>
+        <p class="set-status" id="key-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="set-card" aria-labelledby="set-model-title">
+        <h2 id="set-model-title">Modèle Claude</h2>
+        <fieldset class="models">
+          <legend class="sr">Modèle utilisé</legend>
+          <label class="model"><input type="radio" name="model" value="claude-haiku-5-5"><span>Haiku 5.5 : rapide et économique</span><small>Suffisant pour la plupart des idées maîtresses.</small></label>
+          <label class="model"><input type="radio" name="model" value="claude-sonnet-5-5"><span>Sonnet 5.5 : équilibré</span><small>Recommandé, notamment pour lire les photos de pages.</small></label>
+          <label class="model"><input type="radio" name="model" value="claude-opus-5-5"><span>Opus 5.5 : le plus fin</span><small>Pour les thèmes croisés exigeants. Environ deux fois le prix de Sonnet.</small></label>
+        </fieldset>
+      </section>
+
+      <section class="set-card" aria-labelledby="set-queue-title">
+        <h2 id="set-queue-title">Demandes en attente</h2>
+        <p class="set-status" id="queue-status"></p>
+        <div class="set-actions">
+          <button class="btn ghost small" type="button" data-act="queue-run">Envoyer maintenant</button>
+          <button class="link danger" type="button" data-act="queue-clear">Vider la file</button>
+        </div>
+      </section>
+
+      <section class="set-card" aria-labelledby="set-data-title">
+        <h2 id="set-data-title">Vos données</h2>
+        <p class="help">Vos fiches sont enregistrées dans ce téléphone, et nulle part ailleurs. Sauvegardez régulièrement : une sauvegarde se restaure ici ou dans le Cahier de lecture de Claude.</p>
+        <p class="set-status" id="persist-status"></p>
+        <div class="set-actions">
+          <button class="btn ghost small" type="button" data-act="backup">Sauvegarder le cahier</button>
+          <label class="btn ghost small" for="restore-input" role="button" tabindex="0">Importer une sauvegarde</label>
+        </div>
+      </section>
+
+      <section class="set-card" id="install-card" aria-labelledby="set-install-title">
+        <h2 id="set-install-title">Installer l'application</h2>
+        <p class="help" id="install-help">Dans Chrome, ouvrez le menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</p>
+        <div class="set-actions"><button class="btn primary small" type="button" data-act="install" id="install-btn" hidden>Installer sur ce téléphone</button></div>
+      </section>
+
+      <p class="version" id="version"></p>
+    </div>
+  </section>
+
+  <!-- ======================= FICHE ======================= -->
+  <section class="detail" id="v-book" hidden aria-label="Fiche du livre">
+    <div class="topbar">
+      <button class="btn ghost small" id="back" data-act="back">← Cahier</button>
+      <button class="icon-btn" data-act="menu-book" aria-label="Modifier, partager ou supprimer la fiche"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+    </div>
+
+    <header id="d-head"></header>
+    <div class="segctl" role="radiogroup" aria-label="Avancement" id="d-status"></div>
+    <section class="idea" id="d-idea" aria-label="Idée maîtresse"></section>
+    <section class="inbox" id="d-inbox" hidden aria-label="Pages photographiées à trier"></section>
+
+    <div class="tabs" role="tablist" aria-label="Matière de lecture">
+      <button class="tab" role="tab" id="tab-quotes" aria-controls="p-quotes" data-tab="quotes" aria-selected="true">Citations<span class="n" id="n-quotes">0</span></button>
+      <button class="tab" role="tab" id="tab-notes" aria-controls="p-notes" data-tab="notes" aria-selected="false">Notes<span class="n" id="n-notes">0</span></button>
+      <button class="tab" role="tab" id="tab-sources" aria-controls="p-sources" data-tab="sources" aria-selected="false">Sources<span class="n" id="n-sources">0</span></button>
+    </div>
+    <div role="tabpanel" id="p-quotes" aria-labelledby="tab-quotes"><ol class="items" id="l-quotes"></ol></div>
+    <div role="tabpanel" id="p-notes" aria-labelledby="tab-notes" hidden><ol class="items" id="l-notes"></ol></div>
+    <div role="tabpanel" id="p-sources" aria-labelledby="tab-sources" hidden>
+      <div class="panel-actions"><button class="btn ghost small" data-compose="sources">+ Ajouter une source</button></div>
+      <ol class="items" id="l-sources"></ol>
+      <details class="research">
+        <summary>Chercher des recensions avec Claude</summary>
+        <div class="research-body">
+          <p>Demandez la recherche dans l'application Claude, puis collez le résumé comme nouvelle source. Par exemple :</p>
+          <p class="ask" id="research-ask"></p>
+          <button class="link" type="button" data-act="copy-ask">Copier la demande</button>
+        </div>
+      </details>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= BARRES DU BAS ======================= -->
+<nav class="bottombar" id="nav-main" aria-label="Navigation">
+  <div class="bar-inner">
+    <button class="nav-item" data-nav="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h12.5V18H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21h11v-3"/><path d="M8.5 8h6M8.5 11h4"/></svg><span>Cahier</span></button>
+    <button class="nav-add" id="nav-add" data-act="add" aria-label="Ajouter un livre"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="nav-item" data-nav="themes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="2.3"/><circle cx="18" cy="6.5" r="2.3"/><circle cx="12" cy="18" r="2.3"/><path d="M8.2 6.7l7.5-.4M7.1 9.1l3.8 6.8M16.9 8.6l-3.8 7.3"/></svg><span>Thèmes</span></button>
+  </div>
+</nav>
+<nav class="bottombar actionbar" id="nav-book" aria-label="Ajouter à la fiche" hidden>
+  <div class="bar-inner">
+    <button class="act primary" data-compose="quotes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h4v4c0 3-1.3 4.8-3.6 5.8M14 7h4v4c0 3-1.3 4.8-3.6 5.8"/></svg><span>Citation</span></button>
+    <label class="act" for="photo-camera" data-photo-for="current" role="button" tabindex="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Photo d'une page</span></label>
+    <button class="act" data-compose="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19l1-4L16 5l3 3L9 18z"/><path d="M14 7l3 3"/></svg><span>Note</span></button>
+  </div>
+</nav>
+
+<input type="file" id="photo-camera" class="sr" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
+<input type="file" id="photo-gallery" class="sr" accept="image/*" tabindex="-1" aria-hidden="true">
+<input type="file" id="restore-input" class="sr" accept=".json,application/json" tabindex="-1" aria-hidden="true">
+
+<!-- ======================= FENÊTRE LIVRE ======================= -->
+<div class="modal" id="m-book" hidden role="dialog" aria-modal="true" aria-labelledby="mb-title">
+  <form class="modal-box" id="book-form" novalidate>
+    <header class="modal-head">
+      <button type="button" class="link" data-act="close-book">Annuler</button>
+      <h2 id="mb-title">Nouveau livre</h2>
+      <button type="submit" class="btn primary small" id="mb-submit">Ajouter</button>
+    </header>
+    <div class="modal-body">
+      <div class="field">
+        <label for="f-title">Titre</label>
+        <input id="f-title" autocomplete="off" placeholder="Le titre de l'ouvrage">
+      </div>
+      <div class="authorrow">
+        <div class="field">
+          <label for="f-author">Auteur</label>
+          <input id="f-author" autocomplete="off" placeholder="Prénom Nom">
+        </div>
+        <div class="field">
+          <label for="f-pub">Parution</label>
+          <input id="f-pub" maxlength="16" placeholder="1832" autocomplete="off" aria-describedby="f-pub-help">
+        </div>
+      </div>
+      <p class="help" id="f-pub-help">Année de première parution, par exemple 1832, ou 431 av. J.-C. Laissée vide, Claude la proposera à la synthèse s'il connaît l'ouvrage.</p>
+      <fieldset class="seg">
+        <legend>Type d'ouvrage</legend>
+        <label class="opt"><input type="radio" name="ftype" id="f-type-essai" value="essai" checked><span>Essai</span></label>
+        <label class="opt"><input type="radio" name="ftype" id="f-type-litterature" value="litterature"><span>Littérature</span></label>
+        <label class="opt"><input type="radio" name="ftype" id="f-type-autre" value="autre"><span>Autre</span></label>
+      </fieldset>
+      <fieldset class="seg">
+        <legend>Avancement</legend>
+        <label class="opt"><input type="radio" name="fstatus" id="f-st-a-lire" value="a-lire"><span>À lire</span></label>
+        <label class="opt"><input type="radio" name="fstatus" id="f-st-en-cours" value="en-cours" checked><span>En cours</span></label>
+        <label class="opt"><input type="radio" name="fstatus" id="f-st-lu" value="lu"><span>Lu</span></label>
+      </fieldset>
+      <fieldset class="datefield">
+        <legend>Date de lecture</legend>
+        <div class="dategrid">
+          <label class="sr" for="f-month">Mois</label>
+          <select id="f-month"><option value="">Mois (facultatif)</option></select>
+          <label class="sr" for="f-year">Année</label>
+          <input id="f-year" inputmode="numeric" maxlength="4" placeholder="Année" autocomplete="off">
+        </div>
+        <p class="help">C'est le signet de la fiche. Le mois et l'année suffisent : octobre 2026, septembre 2023…</p>
+      </fieldset>
+      <div class="field">
+        <label for="f-themes">Thèmes</label>
+        <input id="f-themes" autocomplete="off" placeholder="stratégie, mémoire, renseignement">
+        <p class="help">Séparés par des virgules. Les livres qui partagent un thème se retrouvent dans l'onglet Thèmes.</p>
+      </div>
+      <p class="form-error" id="f-error" role="alert"></p>
+    </div>
+  </form>
+</div>
+
+<!-- ======================= FENÊTRE D'ÉCRITURE ======================= -->
+<div class="modal" id="m-compose" hidden role="dialog" aria-modal="true" aria-labelledby="mc-title">
+  <form class="modal-box" id="compose-form" novalidate>
+    <header class="modal-head">
+      <button type="button" class="link" data-act="close-compose">Annuler</button>
+      <h2 id="mc-title">Nouvelle citation</h2>
+      <button type="submit" class="btn primary small" id="mc-submit">Ajouter</button>
+    </header>
+    <div class="modal-body">
+      <p class="mc-book" id="mc-book"></p>
+      <div class="grp" id="grp-quotes">
+        <div class="photo-entry" id="photo-entry">
+          <label class="btn ghost small" for="photo-camera" data-photo-for="compose" role="button" tabindex="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></svg>Photographier une page</label>
+          <label class="btn ghost small" for="photo-gallery" data-photo-for="compose" role="button" tabindex="0">Choisir une photo</label>
+        </div>
+        <div class="photo" id="photo-panel" hidden>
+          <div class="photo-head">
+            <img id="photo-thumb" alt="Photo de la page envoyée à Claude" hidden>
+            <div>
+              <p class="photo-status" id="photo-status" role="status" aria-live="polite"></p>
+              <div class="photo-actions">
+                <button class="link" type="button" id="photo-stop" data-act="photo-stop" hidden>Arrêter</button>
+                <button class="link" type="button" id="photo-drop" data-act="inbox-drop-current" hidden>Retirer cette page</button>
+                <button class="link" type="button" data-act="photo-close">Fermer</button>
+              </div>
+            </div>
+          </div>
+          <div id="photo-result"></div>
+        </div>
+        <label class="label" for="q-text">Citation</label>
+        <textarea id="q-text" rows="5" placeholder="Recopiez la phrase qui vous arrête, mot pour mot."></textarea>
+        <div class="row">
+          <label class="sr" for="q-page">Page</label>
+          <input id="q-page" class="page" placeholder="p. 42" autocomplete="off">
+          <label class="sr" for="q-comment">Votre commentaire</label>
+          <input id="q-comment" placeholder="Votre commentaire" autocomplete="off">
+        </div>
+      </div>
+      <div class="grp" id="grp-notes" hidden>
+        <label class="label" for="n-text">Note</label>
+        <textarea id="n-text" rows="6" placeholder="Une idée, une objection, un rapprochement avec une autre lecture…"></textarea>
+        <div class="row">
+          <label class="sr" for="n-page">Page</label>
+          <input id="n-page" class="page" placeholder="p." autocomplete="off">
+        </div>
+      </div>
+      <div class="grp" id="grp-sources" hidden>
+        <label class="label" for="s-label">Origine</label>
+        <input id="s-label" placeholder="Recension, quatrième de couverture, article…" autocomplete="off">
+        <label class="sr" for="s-url">Lien</label>
+        <input id="s-url" type="url" inputmode="url" placeholder="Lien (facultatif)" autocomplete="off">
+        <label class="label" for="s-text">Extrait</label>
+        <textarea id="s-text" rows="6" placeholder="Collez l'extrait ici."></textarea>
+        <p class="help">Claude ne lit pas les liens : collez le texte qui compte.</p>
+      </div>
+      <p class="draft-note" id="mc-draft" hidden>Brouillon retrouvé.</p>
+      <p class="form-error" id="mc-error" role="alert"></p>
+    </div>
+  </form>
+</div>
+
+<!-- ======================= MENU ======================= -->
+<div class="overlay" id="m-actions" hidden>
+  <div class="sheet" id="actions-box" role="dialog" aria-modal="true" aria-label="Options"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+"use strict";
+const APP_VERSION = "1.0.0";
+
+/* ---------- utilitaires ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const squash = s => norm(s).replace(/[^a-z0-9]+/g, " ").trim();
+const newId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+const clone = o => JSON.parse(JSON.stringify(o));
+const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const currentYM = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
+const fmtDate = iso => { if (!iso) return ""; const d = new Date(String(iso).length === 10 ? iso + "T12:00:00" : iso); return isNaN(d) ? "" : d.toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit", year:"numeric"}); };
+const plural = (n, one, many) => `${n} ${n > 1 ? (many || one + "s") : one}`;
+const cleanPage = p => String(p || "").replace(/^p\.?\s*/i, "");
+function hashStr(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (_) {} }
+};
+const ID_OK = /^[A-Za-z0-9_\-.~:@+]{1,200}$/;
+
+const TYPES = {
+  essai:       { label: "Essai",       prefix: "ESS", points: "Arguments",          cv: "e" },
+  litterature: { label: "Littérature", prefix: "LIT", points: "Thèmes et ressorts", cv: "l" },
+  autre:       { label: "Autre",       prefix: "DIV", points: "Points clés",        cv: "a" }
+};
+const STATUS = { "a-lire": "À lire", "en-cours": "En cours", "lu": "Lu" };
+const MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+const MONTHS_SHORT = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const KINDS = ["quotes", "notes", "sources"];
+const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
+const DEFAULT_MODEL = "claude-sonnet-5-5";
+
+function readParts(b) {
+  const v = (b && (b.readOn || (b.finishedOn ? String(b.finishedOn).slice(0, 7) : ""))) || "";
+  const m = /^(\d{4})(?:-(\d{2}))?$/.exec(v);
+  if (!m) return null;
+  const mo = m[2] ? +m[2] : null;
+  return { y: m[1], m: mo && mo >= 1 && mo <= 12 ? mo : null };
+}
+const readLong = b => { const p = readParts(b); return p ? (p.m ? `${MONTHS[p.m - 1]} ${p.y}` : p.y) : ""; };
+const pubLabel = n => (n == null || n === "" || !Number.isFinite(+n)) ? "" : (+n < 0 ? `${-n} av. J.-C.` : String(+n));
+function parsePub(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return { ok: true, val: null };
+  let n = null, m = /^(-)?\s*(\d{1,4})$/.exec(v);
+  if (m) n = m[1] ? -(+m[2]) : +m[2];
+  else if ((m = /^(\d{1,4})\s*(av|avant|bc|bce)\b/i.exec(v))) n = -(+m[1]);
+  const max = new Date().getFullYear() + 1;
+  if (n === null || n === 0 || n < -3000 || n > max) return { ok: false, val: null };
+  return { ok: true, val: n };
+}
+function authorHTML(b, detail) {
+  const a = esc(b.author || "Auteur non renseigné");
+  const p = pubLabel(b.published);
+  if (!p) return a;
+  return detail ? `${a} <span class="pub">· première parution ${esc(p)}</span>` : `${a} <span class="pub">· ${esc(p)}</span>`;
+}
+function ribbonHTML(b) {
+  const p = readParts(b);
+  if (!p) return "";
+  return `<div class="ribbon" role="img" aria-label="Date de lecture : ${esc(readLong(b))}">${p.m ? `<span>${MONTHS_SHORT[p.m - 1]}</span>` : ""}<span>${esc(p.y)}</span></div>`;
+}
+const cvVar = (id, b) => `var(--cv-${(TYPES[b.type] || TYPES.autre).cv}${hashStr(id) % 4 + 1})`;
+const lastName = a => { const p = String(a || "").trim().split(/\s+/); return p[p.length - 1] || ""; };
+function coverHTML(id, b, size) {
+  const tail = size === "md" && readParts(b) ? '<span class="tail"></span>' : "";
+  const inner = size === "xs" ? '<span class="cover-band"></span>'
+    : `<span><span class="cover-band"></span><span class="cover-title">${esc(b.title)}</span></span><span class="cover-author">${esc(lastName(b.author))}</span>`;
+  return `<span class="cover-wrap" aria-hidden="true">${tail}<span class="cover cover-${size}" style="--cv:${cvVar(id, b)}">${inner}</span></span>`;
+}
+function spineHTML(id, b) {
+  const cote = String(b.cote || "").split("·");
+  return `<div class="spine" style="--cv:${cvVar(id, b)}" aria-hidden="true"><span class="spine-title"><span>${esc(b.title)}</span></span><span class="spine-cote">${cote.map(esc).join("<br>")}</span></div>`;
+}
+
+const EXAMPLES = [
+  { id: "ex-1", title: "De la guerre", author: "Carl von Clausewitz", published: 1832, type: "essai", cote: "ESS·001", status: "lu", readOn: "2026-09",
+    themes: ["stratégie", "politique"], q: 6, n: 9, s: 2,
+    idea: "La guerre n'a pas de logique propre : elle prolonge la politique par d'autres moyens et reste soumise à la passion, au hasard et à la raison." },
+  { id: "ex-2", title: "Le Désert des Tartares", author: "Dino Buzzati", published: 1940, type: "litterature", cote: "LIT·001", status: "en-cours", readOn: "2023-09",
+    themes: ["attente", "temps"], q: 3, n: 2, s: 0,
+    idea: "Une vie passée à guetter l'événement qui lui donnerait un sens s'écoule sans qu'on la voie : l'attente finit par devenir la vie elle-même." }
+];
+
+/* ---------- état ---------- */
+const SORTS = {
+  recent: (x, y) => String(y.b.updatedAt || "").localeCompare(String(x.b.updatedAt || "")),
+  read: (x, y) => readKey(y.b).localeCompare(readKey(x.b)) || SORTS.recent(x, y),
+  pub: (x, y) => {
+    const a = x.b.published, c = y.b.published;
+    if (a == null && c == null) return SORTS.title(x, y);
+    if (a == null) return 1;
+    if (c == null) return -1;
+    return a - c || SORTS.title(x, y);
+  },
+  title: (x, y) => String(x.b.title || "").localeCompare(String(y.b.title || ""), "fr", { sensitivity: "base" }),
+  author: (x, y) => (norm(lastName(x.b.author)) || "~").localeCompare(norm(lastName(y.b.author)) || "~", "fr") || SORTS.title(x, y)
+};
+const readKey = b => { const p = readParts(b); return p ? `${p.y}-${String(p.m || 0).padStart(2, "0")}` : ""; };
+
+const S = {
+  books: new Map(), themeDocs: new Map(), jobs: [],
+  ready: false, storageError: false, persisted: null,
+  apiKey: LS.get("cahier.apiKey") || "", model: MODELS.includes(LS.get("cahier.model")) ? LS.get("cahier.model") : DEFAULT_MODEL,
+  installEvt: null, queueRunning: false,
+  view: "home", current: null, themeOpen: null, backTo: null, homeScroll: 0,
+  status: "all", query: "", sort: LS.get("cahier.sort") || "recent", tab: "quotes", ideaOpen: false,
+  composer: null, bookEdit: null, dateTouched: false,
+  synth: null, synthMsg: null, tsynth: null, tsynthMsg: null,
+  ocr: null, ocrCtl: null, lastSel: "", thumbUrl: null, photoFor: null, restore: null
+};
+if (!SORTS[S.sort]) S.sort = "recent";
+
+/* ---------- stockage dans le téléphone (IndexedDB) ---------- */
+let dbPromise = null;
+function idb() {
+  if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
+    const r = indexedDB.open("cahier-de-lecture", 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if (!d.objectStoreNames.contains("docs")) d.createObjectStore("docs", { keyPath: "id" });
+      if (!d.objectStoreNames.contains("jobs")) d.createObjectStore("jobs", { keyPath: "id" });
+    };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.onblocked = () => reject(new Error("blocked"));
+  });
+  return dbPromise;
+}
+async function idbAll(store) {
+  const d = await idb();
+  return new Promise((resolve, reject) => { const q = d.transaction(store).objectStore(store).getAll(); q.onsuccess = () => resolve(q.result || []); q.onerror = () => reject(q.error); });
+}
+async function idbWrite(store, fn) {
+  const d = await idb();
+  return new Promise((resolve, reject) => {
+    const t = d.transaction(store, "readwrite");
+    fn(t.objectStore(store));
+    t.oncomplete = () => resolve(true);
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+  });
+}
+const idbPut = (store, val) => idbWrite(store, s => s.put(val));
+const idbDel = (store, key) => idbWrite(store, s => s.delete(key));
+
+/* ---------- démarrage ---------- */
+async function boot() {
+  renderAll();
+  try {
+    const all = await idbAll("docs");
+    for (const rec of all) {
+      const v = rec && rec.data;
+      if (!v) continue;
+      if (v.kind === "book") S.books.set(rec.id, v);
+      else if (v.kind === "theme" && v.theme) S.themeDocs.set(v.theme, v);
+    }
+    S.jobs = (await idbAll("jobs")).sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  } catch (_) { S.storageError = true; }
+  S.ready = !S.storageError;
+  renderAll();
+  try {
+    if (navigator.storage && navigator.storage.persist) S.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist());
+  } catch (_) { S.persisted = null; }
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+  processQueue();
+}
+window.addEventListener("online", () => { toast("Connexion retrouvée."); processQueue(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") processQueue(); });
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); S.installEvt = e; renderAll(); });
+window.addEventListener("appinstalled", () => { S.installEvt = null; toast("Application installée."); renderAll(); });
+
+/* ---------- écriture ---------- */
+async function saveDoc(id, data, keepStamp) {
+  if (S.storageError) { toast("Le stockage du téléphone n'est pas accessible."); return false; }
+  if (!keepStamp || !data.updatedAt) data.updatedAt = new Date().toISOString();
+  if (data.kind === "book") S.books.set(id, data);
+  else if (data.kind === "theme") S.themeDocs.set(data.theme, data);
+  renderAll();
+  try { await idbPut("docs", { id, data }); return true; }
+  catch (e) {
+    toast(e && e.name === "QuotaExceededError"
+      ? "Le téléphone manque de place : libérez de l'espace, puis recommencez."
+      : "L'enregistrement dans le téléphone a échoué. Recommencez.");
+    return false;
+  }
+}
+const saveBook = (id, b, keep) => saveDoc(id, b, keep);
+
+/* ---------- calculs ---------- */
+function sig(b) {
+  const q = b.quotes || [], n = b.notes || [], s = b.sources || [];
+  const len = [...q, ...n, ...s].reduce((t, x) => t + (x.text || "").length + (x.comment || "").length + (x.label || "").length, 0);
+  return `${q.length}.${n.length}.${s.length}.${len}`;
+}
+const isStale = b => !!(b.synthesis && b.synthesis.basis && b.synthesis.basis.sig !== sig(b));
+function nextCote(type, exceptId) {
+  const p = (TYPES[type] || TYPES.autre).prefix;
+  let max = 0;
+  for (const [id, b] of S.books) {
+    if (id === exceptId) continue;
+    const m = /^([A-Z]{3})·(\d+)$/.exec(b.cote || "");
+    if (m && m[1] === p) max = Math.max(max, +m[2]);
+  }
+  return `${p}·${String(max + 1).padStart(3, "0")}`;
+}
+function parseThemes(s) {
+  const out = [];
+  for (const t of String(s || "").split(/[,;]/)) {
+    const v = t.trim().toLowerCase().slice(0, 40);
+    if (v && !out.includes(v)) out.push(v);
+  }
+  return out.slice(0, 12);
+}
+function themeCounts() {
+  const m = new Map();
+  for (const b of S.books.values()) for (const t of (b.themes || [])) m.set(t, (m.get(t) || 0) + 1);
+  return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"));
+}
+const themeDocId = t => "theme-" + (squash(t).replace(/ /g, "-").slice(0, 120) || hashStr(t).toString(36));
+function booksWithTheme(t) {
+  return [...S.books].filter(([, b]) => (b.themes || []).includes(t)).map(([id, b]) => ({ id, b }))
+    .sort((x, y) => String(x.b.title || "").localeCompare(String(y.b.title || ""), "fr", { sensitivity: "base" }));
+}
+const themeSig = t => booksWithTheme(t).map(({ id, b }) => `${id}:${sig(b)}:${(b.synthesis && b.synthesis.at) || ""}`).sort().join("|");
+function visibleBooks() {
+  const q = norm(S.query);
+  return [...S.books].map(([id, b]) => ({ id, b }))
+    .filter(({ b }) => S.status === "all" || b.status === S.status)
+    .filter(({ b }) => !q || norm([b.title, b.author, b.synthesis && b.synthesis.phrase, (b.themes || []).join(" "), readLong(b), pubLabel(b.published)].join(" ")).includes(q))
+    .sort(SORTS[S.sort] || SORTS.recent);
+}
+const countsLine = (q, n, s) => `${plural(q, "citation")} · ${plural(n, "note")} · ${plural(s, "source")}`;
+function statusPill(b) {
+  const s = STATUS[b.status] ? b.status : "a-lire";
+  return `<span class="pill ${esc(s)}">${esc(STATUS[s])}</span>`;
+}
+const jobsFor = (type, key) => S.jobs.filter(j => j.type === type && (type === "theme" ? j.theme === key : j.bookId === key));
+
+/* ---------- rendu : cahier ---------- */
+function cardHTML(id, b) {
+  const syn = b.synthesis;
+  const idea = syn && syn.phrase
+    ? `<p class="fiche-idea">${esc(syn.phrase)}</p>`
+    : `<p class="fiche-idea muted">${jobsFor("synth", id).length ? "Idée maîtresse en attente du réseau." : "Idée maîtresse à établir."}</p>`;
+  const chips = (b.themes || []).map(t => `<li><button class="chip" data-theme-open="${esc(t)}" aria-label="Voir le thème : ${esc(t)}">${esc(t)}</button></li>`).join("");
+  const rib = ribbonHTML(b);
+  const inbox = (b.inbox || []).length + jobsFor("ocr", id).length;
+  return `<article class="fiche${rib ? " has-ribbon" : ""}">
+    ${spineHTML(id, b)}
+    <div class="fiche-body">
+      ${rib}
+      <div class="fiche-head">${statusPill(b)}${isStale(b) ? '<span class="stale">à revoir</span>' : ""}${inbox ? `<span class="stale">${plural(inbox, "page")} à trier</span>` : ""}</div>
+      <h2 class="fiche-title"><button class="stretch" data-open="${esc(id)}">${esc(b.title)}</button></h2>
+      <p class="fiche-author">${authorHTML(b)}</p>
+      ${idea}
+      <div class="fiche-foot"><span class="counts">${countsLine((b.quotes || []).length, (b.notes || []).length, (b.sources || []).length)}</span></div>
+      ${chips ? `<ul class="chips">${chips}</ul>` : ""}
+    </div>
+  </article>`;
+}
+function exampleHTML(e) {
+  return `<article class="fiche example has-ribbon" aria-label="Exemple de fiche">
+    ${spineHTML(e.id, e)}
+    <div class="fiche-body">
+      ${ribbonHTML(e)}
+      <div class="fiche-head">${statusPill(e)}<span class="tag-ex">Exemple</span></div>
+      <h2 class="fiche-title">${esc(e.title)}</h2>
+      <p class="fiche-author">${authorHTML(e)}</p>
+      <p class="fiche-idea">${esc(e.idea)}</p>
+      <div class="fiche-foot"><span class="counts">${countsLine(e.q, e.n, e.s)}</span></div>
+      <ul class="chips">${e.themes.map(t => `<li><span class="chip">${esc(t)}</span></li>`).join("")}</ul>
+    </div>
+  </article>`;
+}
+const ICON_QUOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h4v4c0 3-1.3 4.8-3.6 5.8M14 7h4v4c0 3-1.3 4.8-3.6 5.8"/></svg>';
+const ICON_CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></svg>';
+const ICON_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19l1-4L16 5l3 3L9 18z"/><path d="M14 7l3 3"/></svg>';
+function currentHTML() {
+  const cur = [...S.books].filter(([, b]) => b.status === "en-cours")
+    .sort((x, y) => String(y[1].updatedAt || "").localeCompare(String(x[1].updatedAt || "")));
+  if (!cur.length) return "";
+  const [id, b] = cur[0];
+  const others = cur.slice(1, 4);
+  return `<div class="current">
+    <p class="label">Ma lecture en cours</p>
+    <div class="current-card">
+      <button class="plain" data-open="${esc(id)}" aria-label="Ouvrir la fiche : ${esc(b.title)}">${coverHTML(id, b, "sm")}</button>
+      <div class="current-info">
+        <h2 class="current-title"><button class="plain" data-open="${esc(id)}">${esc(b.title)}</button></h2>
+        <p class="fiche-author">${authorHTML(b)}</p>
+        <p class="counts">${countsLine((b.quotes || []).length, (b.notes || []).length, (b.sources || []).length)}</p>
+      </div>
+    </div>
+    <div class="current-actions">
+      <button class="btn primary small" data-compose="quotes" data-book="${esc(id)}">${ICON_QUOTE}Citation</button>
+      <label class="btn ghost small" for="photo-camera" data-photo-for="${esc(id)}" role="button" tabindex="0">${ICON_CAMERA}Photo</label>
+      <button class="btn ghost small" data-compose="notes" data-book="${esc(id)}">${ICON_NOTE}Note</button>
+    </div>
+    ${others.length ? `<p class="also">Aussi en cours : ${others.map(([oid, ob]) => `<button class="link" data-open="${esc(oid)}">${esc(ob.title)}</button>`).join(", ")}</p>` : ""}
+  </div>`;
+}
+function welcomeHTML() {
+  return `<div class="welcome">
+    <h2>Bienvenue dans votre Cahier de lecture</h2>
+    <p>Tout reste dans ce téléphone et fonctionne sans réseau. Trois étapes pour bien démarrer :</p>
+    <ol class="steps">
+      <li><strong>Reprendre votre cahier de Claude</strong><span class="help">Dans le Cahier de lecture de Claude, menu ⋯, « Sauvegarder le cahier ». Importez ici le fichier obtenu.</span><label class="btn ghost small" for="restore-input" role="button" tabindex="0">Importer une sauvegarde</label></li>
+      <li><strong>Ajouter votre clé d'API Claude</strong><span class="help">Pour l'idée maîtresse, la lecture des photos et les thèmes croisés.</span><button class="btn ghost small" data-act="settings">${S.apiKey ? "Clé enregistrée · Réglages" : "Ouvrir les réglages"}</button></li>
+      <li><strong>Installer l'application</strong><span class="help">${S.installEvt ? "Une icône sur l'écran d'accueil, en plein écran." : "Dans Chrome, menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil »."}</span>${S.installEvt ? '<button class="btn ghost small" data-act="install">Installer</button>' : ""}</li>
+    </ol>
+    <button class="btn primary" data-act="add">Ajouter un premier livre</button>
+  </div>`;
+}
+function renderHome() {
+  const books = [...S.books.values()];
+  const tally = $("#tally");
+  if (S.ready) {
+    const n = books.length, ec = books.filter(b => b.status === "en-cours").length, lu = books.filter(b => b.status === "lu").length;
+    tally.textContent = `${plural(n, "ouvrage")} · ${ec} en cours · ${plural(lu, "lu")}`;
+  } else {
+    tally.textContent = S.storageError ? "Stockage inaccessible" : "Ouverture de votre cahier…";
+  }
+  $("#queue-note").textContent = S.jobs.length ? `${plural(S.jobs.length, "demande")} à Claude en attente${navigator.onLine ? "" : " du réseau"}` : "";
+  $("#storage-notice").hidden = !S.storageError;
+  $("#menu-home").hidden = !S.ready;
+  const has = S.ready && books.length > 0;
+  $("#toolbar").hidden = !has;
+  $("#current").innerHTML = has ? currentHTML() : "";
+  const counts = { all: books.length, "en-cours": 0, lu: 0, "a-lire": 0 };
+  for (const b of books) if (counts[b.status] != null) counts[b.status]++;
+  for (const k of Object.keys(counts)) $("#c-" + k).textContent = String(counts[k]);
+  for (const el of document.querySelectorAll("[data-status]")) el.setAttribute("aria-pressed", String(el.dataset.status === S.status));
+  $("#sort").value = S.sort;
+
+  const shelf = $("#shelf");
+  if (!S.ready) { shelf.innerHTML = S.storageError ? "" : `<p class="loading">Ouverture de votre cahier…</p>`; return; }
+  if (!books.length) {
+    shelf.innerHTML = `${welcomeHTML()}
+      <p class="label section-label">À quoi ressemblera une fiche</p>
+      <div class="grid">${EXAMPLES.map(exampleHTML).join("")}</div>`;
+    return;
+  }
+  const vis = visibleBooks();
+  shelf.innerHTML = vis.length
+    ? `<div class="grid">${vis.map(({ id, b }) => cardHTML(id, b)).join("")}</div>`
+    : `<p class="loading">Aucun livre ne correspond à cette recherche.</p>`;
+}
+
+/* ---------- rendu : fiche ---------- */
+function ideaMoreHTML(b) {
+  const s = b.synthesis, t = TYPES[b.type] || TYPES.autre;
+  const themes = b.themes || [];
+  const kw = (s.motsCles || []).map(k => themes.includes(k)
+    ? `<span class="chip done">${esc(k)} · ajouté</span>`
+    : `<button class="chip add" data-kw="${esc(k)}">+ ${esc(k)}</button>`).join(" ");
+  const basis = s.basis || {};
+  const partLabel = { aucune: "aucune", faible: "faible", importante: "importante" }[s.part] || "faible";
+  return `
+    ${s.developpement ? `<p class="idea-dev">${esc(s.developpement)}</p>` : ""}
+    ${(s.points || []).length ? `<h3 class="label">${esc(t.points)}</h3><ul class="points">${s.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+    ${s.citationCle ? `<figure class="key-quote"><blockquote><span class="hl">${esc(s.citationCle)}</span></blockquote><figcaption class="label">Citation clé, tirée de vos relevés</figcaption></figure>` : ""}
+    ${s.aCreuser ? `<p class="dig"><span class="label">À creuser</span>${esc(s.aCreuser)}</p>` : ""}
+    ${kw ? `<div class="kw"><span class="label">Thèmes proposés</span><div class="chips">${kw}</div></div>` : ""}
+    ${s.anneeParution != null && b.published == null ? `<div class="kw"><span class="label">Première parution proposée</span><div class="chips"><button class="chip add" data-act="accept-pub">+ ${esc(pubLabel(s.anneeParution))}</button></div></div>` : ""}
+    ${s.anneeParution != null && b.published != null && +s.anneeParution !== +b.published ? `<p class="caution">Claude situe la première parution en ${esc(pubLabel(s.anneeParution))} ; vous avez noté ${esc(pubLabel(b.published))}. <button class="link" data-act="accept-pub">Retenir ${esc(pubLabel(s.anneeParution))}</button></p>` : ""}
+    ${s.ouvrageConnu === false ? `<p class="caution">Claude ne connaît pas cet ouvrage avec certitude : cette synthèse repose uniquement sur votre matière.</p>` : ""}
+    <p class="prov">Établie le ${esc(fmtDate(s.at))} à partir de ${plural(basis.quotes || 0, "citation")}, ${plural(basis.notes || 0, "note")} et ${plural(basis.sources || 0, "source externe", "sources externes")}. Part de connaissance générale : ${esc(partLabel)}.</p>`;
+}
+function renderIdea(b) {
+  const s = b.synthesis, has = !!(s && s.phrase);
+  const busy = !!(S.synth && S.synth.id === S.current);
+  const queued = jobsFor("synth", S.current).length > 0;
+  const stale = isStale(b);
+  const total = (b.quotes || []).length + (b.notes || []).length + (b.sources || []).length;
+  let html = `<div class="idea-top"><span class="label">Idée maîtresse</span>${stale ? '<span class="stale">nouvelle matière depuis la synthèse</span>' : ""}</div>`;
+  if (has) {
+    html += `<p class="idea-sentence">${esc(s.phrase)}</p><div class="idea-more"${S.ideaOpen ? "" : " hidden"}>${ideaMoreHTML(b)}</div>`;
+  } else {
+    html += `<p class="idea-empty">${total
+      ? "Votre matière est prête. Claude part de vos citations et de vos notes, puis complète avec ce qu'il sait de l'ouvrage."
+      : "Ajoutez quelques citations ou notes avec la barre du bas, ou demandez l'idée maîtresse dès maintenant : Claude partira de ce qu'il sait de l'ouvrage."}</p>`;
+  }
+  let actions = "";
+  if (has) actions += `<button class="link" data-act="idea-toggle" aria-expanded="${S.ideaOpen}">${S.ideaOpen ? "Replier la synthèse" : "Lire la synthèse complète"}</button>`;
+  if (!queued && (!has || stale || S.ideaOpen || busy)) {
+    actions += `<button class="btn ${has ? "ghost small" : "primary"}" data-act="synth"${(S.synth || !S.ready) ? " disabled" : ""}>${busy ? "Synthèse en cours…" : has ? "Mettre à jour" : "Établir l'idée maîtresse"}</button>`;
+  }
+  if (busy) actions += `<button class="btn ghost small" data-act="synth-stop">Arrêter</button>`;
+  let st = "";
+  if (busy) st = `<span class="pulse" aria-hidden="true"></span>Claude lit vos citations, vos notes et vos sources. Comptez de dix secondes à une minute.`;
+  else if (queued) st = "En attente du réseau : la synthèse partira dès le retour de la connexion.";
+  else if (S.synthMsg && S.synthMsg.id === S.current) st = esc(S.synthMsg.text) + (S.synthMsg.settings ? ' <button class="link" data-act="settings">Ouvrir les réglages</button>' : "");
+  else if (!S.apiKey && S.ready) st = 'Ajoutez votre clé d\'API Claude pour établir l\'idée maîtresse. <button class="link" data-act="settings">Ouvrir les réglages</button>';
+  html += `<div class="synth-row">${actions}<p class="synth-status" role="status" aria-live="polite">${st}</p></div>`;
+  $("#d-idea").innerHTML = html;
+}
+function renderInbox(id, b) {
+  const box = $("#d-inbox");
+  const items = b.inbox || [], waiting = jobsFor("ocr", id).length;
+  if (!items.length && !waiting) { box.hidden = true; box.innerHTML = ""; return; }
+  box.hidden = false;
+  box.innerHTML = `<p class="label">Pages photographiées à trier</p>
+    ${waiting ? `<p class="help">${plural(waiting, "photo")} en attente du réseau : Claude la lira dès le retour de la connexion.</p>` : ""}
+    ${items.length ? `<ul>${items.map(it => `<li>
+      <button class="link" data-inbox="${esc(it.id)}">${it.page ? `Page ${esc(it.page)}` : "Page sans numéro"} · ${it.marked && it.marked.length ? plural(it.marked.length, "passage marqué", "passages marqués") : "texte complet"}</button>
+      <span class="meta">${esc(fmtDate(it.at))}</span>
+      <button class="link danger" data-inbox-drop="${esc(it.id)}">Retirer</button></li>`).join("")}</ul>` : ""}`;
+}
+function itemHTML(kind, it) {
+  const page = it.page ? `<span>p. ${esc(cleanPage(it.page))}</span>` : "";
+  const date = `<span>${esc(fmtDate(it.at))}</span>`;
+  const actions = `<div class="item-actions">
+      <button class="link" data-edit="${kind}:${esc(it.id)}">Modifier</button>
+      <button class="link danger" data-del="${kind}:${esc(it.id)}">Supprimer</button></div>`;
+  if (kind === "quotes") return `<li class="item">
+      <blockquote><span class="hl">${esc(it.text)}</span></blockquote>
+      ${it.comment ? `<p class="q-comment">${esc(it.comment)}</p>` : ""}
+      <div class="item-meta">${page}${date}</div>${actions}</li>`;
+  if (kind === "notes") return `<li class="item">
+      <p class="text">${esc(it.text)}</p>
+      <div class="item-meta">${page}${date}</div>${actions}</li>`;
+  const safeUrl = /^https?:\/\//i.test(it.url || "") ? it.url : "";
+  const long = (it.text || "").length > 280;
+  return `<li class="item">
+      <p class="src-label">${esc(it.label || "Source externe")}</p>
+      ${safeUrl ? `<a class="src-url" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${esc(safeUrl)}</a>` : ""}
+      ${long ? `<details class="excerpt"><summary>Lire l'extrait (${(it.text || "").length.toLocaleString("fr-FR")} caractères)</summary><p class="text">${esc(it.text)}</p></details>` : `<p class="text">${esc(it.text)}</p>`}
+      <div class="item-meta">${date}</div>${actions}</li>`;
+}
+const NONE = {
+  quotes: "Aucune citation pour l'instant. Touchez « Citation » en bas de l'écran, ou photographiez une page.",
+  notes: "Aucune note pour l'instant. Touchez « Note » en bas de l'écran pour noter une idée, une objection, un rapprochement.",
+  sources: "Aucune source externe. Collez un extrait de recension, de quatrième de couverture ou d'article : Claude s'en servira pour la synthèse."
+};
+function renderBook() {
+  const id = S.current, b = S.books.get(id);
+  if (!b) { if (S.ready) { S.view = "home"; S.current = null; renderAll(); } return; }
+  const t = TYPES[b.type] || TYPES.autre;
+  const bt = S.backTo || { view: "home" };
+  $("#back").textContent = bt.view === "theme" ? `← ${bt.theme}` : bt.view === "themes" ? "← Thèmes" : "← Cahier";
+  $("#d-head").innerHTML = `
+    <div class="d-top">${coverHTML(id, b, "md")}
+      <div class="d-top-info">
+        <p class="d-meta">${esc(b.cote || "")} · ${esc(t.label)}${readLong(b) ? ` · <span class="signet">lecture : ${esc(readLong(b))}</span>` : ""}</p>
+        <h1 class="d-title">${esc(b.title)}</h1>
+        <p class="d-author">${authorHTML(b, true)}</p>
+      </div>
+    </div>
+    ${(b.themes || []).length ? `<ul class="chips d-themes">${b.themes.map(x => `<li><button class="chip" data-theme-open="${esc(x)}">${esc(x)}</button></li>`).join("")}</ul>` : ""}`;
+  $("#d-status").innerHTML = ["a-lire", "en-cours", "lu"].map(st =>
+    `<button type="button" role="radio" aria-checked="${b.status === st}" data-set-status="${st}">${STATUS[st]}</button>`).join("");
+  renderIdea(b);
+  renderInbox(id, b);
+  for (const k of KINDS) {
+    const arr = (b[k] || []).slice().reverse();
+    $("#n-" + k).textContent = String(arr.length);
+    $("#l-" + k).innerHTML = arr.length ? arr.map(it => itemHTML(k, it)).join("") : `<li><p class="none">${NONE[k]}</p></li>`;
+    const sel = S.tab === k;
+    $("#tab-" + k).setAttribute("aria-selected", String(sel));
+    $("#tab-" + k).tabIndex = sel ? 0 : -1;
+    $("#p-" + k).hidden = !sel;
+  }
+  $("#research-ask").textContent = `Cherche des recensions et analyses de « ${b.title} »${b.author ? ` de ${b.author}` : ""}, puis donne-moi un résumé de quelques lignes à coller dans ma fiche, avec les liens.`;
+}
+
+/* ---------- rendu : thèmes ---------- */
+function renderThemes() {
+  const themes = themeCounts();
+  $("#themes-tally").textContent = S.ready ? (themes.length ? `${plural(themes.length, "thème")} · ${plural(S.books.size, "ouvrage")}` : "") : "";
+  const box = $("#themes-list");
+  if (!S.ready) { box.innerHTML = ""; return; }
+  if (!themes.length) {
+    box.innerHTML = `<div class="empty"><h2>Pas encore de thème</h2><p>Ajoutez des thèmes à vos fiches, dans le champ Thèmes ou parmi ceux que Claude propose après une synthèse. Les livres qui partagent un thème se retrouvent ici, prêts à dialoguer.</p></div>`;
+    return;
+  }
+  box.innerHTML = `<ul class="theme-list">${themes.map(([t, n]) => {
+    const entries = booksWithTheme(t);
+    const doc = S.themeDocs.get(t);
+    const crossed = doc && doc.result;
+    const stale = crossed && doc.basis && doc.basis.sig !== themeSig(t);
+    const shelf = entries.slice(0, 7).map(({ id, b }) => `<i style="--cv:${cvVar(id, b)};height:${22 + hashStr(id) % 12}px"></i>`).join("");
+    return `<li><button class="theme-row" data-theme-open="${esc(t)}">
+      <span class="theme-name">${esc(t)}</span>
+      <span class="mini-shelf" aria-hidden="true">${shelf}</span>
+      <span class="theme-sub"><span>${plural(n, "livre")}</span>${crossed ? (stale ? '<span class="stale">à revoir</span>' : '<span class="pill en-cours">croisé</span>') : ""}${jobsFor("theme", t).length ? '<span class="stale">en attente</span>' : ""}</span>
+    </button></li>`;
+  }).join("")}</ul>`;
+}
+function renderTheme() {
+  const t = S.themeOpen, entries = t ? booksWithTheme(t) : [];
+  if (!entries.length) { if (S.ready) { S.view = "themes"; renderAll(); } return; }
+  const doc = S.themeDocs.get(t);
+  const r = doc && doc.result;
+  const stale = !!(r && doc.basis && doc.basis.sig !== themeSig(t));
+  const busy = !!(S.tsynth && S.tsynth.theme === t);
+  const queued = jobsFor("theme", t).length > 0;
+  const paras = s => String(s || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => `<p class="idea-dev">${esc(p)}</p>`).join("");
+  const cites = r ? (r.citations || []).filter(c => S.books.has(c.bookId)) : [];
+  let synth = `<div class="idea-top"><span class="label">Ce que vos lectures en disent</span>${stale ? '<span class="stale">fiches modifiées depuis</span>' : ""}</div>`;
+  if (r) {
+    synth += `<p class="idea-sentence">${esc(r.these)}</p>
+      <div class="idea-more">
+        ${paras(r.synthese)}
+        ${(r.convergences || []).length ? `<h3 class="label">Convergences</h3><ul class="points">${r.convergences.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        ${(r.divergences || []).length ? `<h3 class="label">Tensions et différences</h3><ul class="points">${r.divergences.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        ${cites.length ? `<h3 class="label">Citations qui se répondent</h3>${cites.map(c => `<figure class="key-quote"><blockquote><span class="hl">${esc(c.text)}</span></blockquote><figcaption><button class="link" data-open="${esc(c.bookId)}">${esc(c.title)}${c.page ? `, p. ${esc(cleanPage(c.page))}` : ""}</button></figcaption></figure>`).join("")}` : ""}
+        ${r.question ? `<p class="dig"><span class="label">Pour prolonger</span>${esc(r.question)}</p>` : ""}
+        <p class="prov">Établie le ${esc(fmtDate(doc.at))} à partir de ${plural((doc.basis && doc.basis.ids || []).length, "ouvrage")}.</p>
+      </div>`;
+  } else {
+    synth += `<p class="idea-empty">${entries.length < 2
+      ? "Ce thème ne réunit encore qu'un livre. Ajoutez-le à une autre fiche pour faire dialoguer vos lectures."
+      : `Claude peut faire dialoguer ces ${entries.length} lectures : ce qu'elles partagent, ce qui les oppose, et les citations qui se répondent.`}</p>`;
+  }
+  let actions = "";
+  if (entries.length >= 2 && !queued) actions += `<button class="btn ${r ? "ghost small" : "primary"}" data-act="tsynth"${(S.tsynth || !S.ready) ? " disabled" : ""}>${busy ? "Synthèse en cours…" : r ? "Mettre à jour" : "Faire dialoguer ces lectures"}</button>`;
+  if (busy) actions += `<button class="btn ghost small" data-act="tsynth-stop">Arrêter</button>`;
+  let st = "";
+  if (busy) st = `<span class="pulse" aria-hidden="true"></span>Claude croise vos fiches. Comptez de vingt secondes à une minute.`;
+  else if (queued) st = "En attente du réseau : la synthèse croisée partira dès le retour de la connexion.";
+  else if (S.tsynthMsg && S.tsynthMsg.theme === t) st = esc(S.tsynthMsg.text) + (S.tsynthMsg.settings ? ' <button class="link" data-act="settings">Ouvrir les réglages</button>' : "");
+  else if (!S.apiKey && entries.length >= 2) st = 'Ajoutez votre clé d\'API Claude pour croiser ces lectures. <button class="link" data-act="settings">Ouvrir les réglages</button>';
+  synth += `<div class="synth-row">${actions}<p class="synth-status" role="status" aria-live="polite">${st}</p></div>`;
+  $("#theme-body").innerHTML = `
+    <header class="theme-head"><p class="label">Thème</p><h1 class="d-title">${esc(t)}</h1><p class="tally">${plural(entries.length, "livre")}</p></header>
+    <section class="idea">${synth}</section>
+    <p class="label section-label">Les livres de ce thème</p>
+    <ul class="tb-list">${entries.map(({ id, b }) => `<li><button class="tb-row" data-open="${esc(id)}">${coverHTML(id, b, "xs")}<span class="tb-info"><span class="tb-title">${esc(b.title)}</span><span class="tb-author">${authorHTML(b)}</span>${b.synthesis && b.synthesis.phrase ? `<span class="tb-idea">${esc(b.synthesis.phrase)}</span>` : `<span class="tb-idea muted">Idée maîtresse à établir</span>`}</span></button></li>`).join("")}</ul>`;
+}
+
+/* ---------- rendu : réglages ---------- */
+function renderSettings() {
+  const inp = $("#api-key");
+  if (document.activeElement !== inp && !inp.dataset.dirty) inp.value = S.apiKey;
+  $("#key-clear").hidden = !S.apiKey;
+  const ks = $("#key-status");
+  if (!ks.dataset.locked) { ks.className = "set-status"; ks.textContent = S.apiKey ? "Une clé est enregistrée dans ce téléphone." : "Aucune clé enregistrée : les fonctions de Claude sont en pause."; }
+  for (const r of document.querySelectorAll('input[name="model"]')) r.checked = r.value === S.model;
+  $("#queue-status").textContent = S.jobs.length
+    ? `${plural(S.jobs.length, "demande")} en attente : ${[["synth", "idée maîtresse"], ["theme", "thème croisé"], ["ocr", "photo"]].map(([k, l]) => { const n = S.jobs.filter(j => j.type === k).length; return n ? `${n} ${l}${n > 1 ? "s" : ""}` : ""; }).filter(Boolean).join(", ")}.`
+    : "Aucune demande en attente.";
+  $("#persist-status").textContent = S.persisted === true ? "Stockage protégé : Android ne l'effacera pas pour libérer de la place."
+    : S.persisted === false ? "Stockage non protégé : installez l'application pour qu'Android ne l'efface pas en cas de manque de place." : "";
+  $("#install-btn").hidden = !S.installEvt;
+  $("#install-help").textContent = S.installEvt ? "L'application s'ajoutera à votre écran d'accueil et s'ouvrira en plein écran." : "Dans Chrome, ouvrez le menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil ». Si l'application est déjà installée, il n'y a rien à faire.";
+  $("#version").textContent = `Cahier de lecture · version ${APP_VERSION}`;
+}
+
+function renderAll() {
+  const v = S.view;
+  $("#v-home").hidden = v !== "home";
+  $("#v-themes").hidden = v !== "themes";
+  $("#v-theme").hidden = v !== "theme";
+  $("#v-book").hidden = v !== "book";
+  $("#v-settings").hidden = v !== "settings";
+  $("#nav-main").hidden = v === "book";
+  $("#nav-book").hidden = v !== "book";
+  const tab = v === "themes" || v === "theme" ? "themes" : "home";
+  for (const el of document.querySelectorAll("[data-nav]")) {
+    if (el.dataset.nav === tab) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current");
+  }
+  $("#nav-add").disabled = !S.ready;
+  if (v === "home") renderHome();
+  else if (v === "themes") renderThemes();
+  else if (v === "theme") renderTheme();
+  else if (v === "settings") renderSettings();
+  else renderBook();
+}
+
+/* ---------- navigation ---------- */
+function go(view, theme) {
+  if (S.view === "home") S.homeScroll = window.scrollY;
+  S.view = view;
+  if (theme !== undefined) S.themeOpen = theme;
+  if (view !== "book") S.current = null;
+  renderAll();
+  window.scrollTo(0, view === "home" ? S.homeScroll : 0);
+}
+function openBook(id) {
+  if (!S.books.has(id)) return;
+  if (S.view !== "book") S.backTo = { view: S.view, theme: S.themeOpen, scroll: window.scrollY };
+  if (S.view === "home") S.homeScroll = window.scrollY;
+  S.current = id; S.view = "book"; S.ideaOpen = false;
+  renderAll();
+  window.scrollTo(0, 0);
+  try { $("#back").focus({ preventScroll: true }); } catch (_) {}
+}
+function back() {
+  if (S.view === "book") {
+    const bt = S.backTo || { view: "home" };
+    S.current = null;
+    S.view = bt.view === "book" ? "home" : bt.view;
+    S.themeOpen = bt.theme;
+    renderAll();
+    window.scrollTo(0, bt.view === "home" ? S.homeScroll : (bt.scroll || 0));
+  } else if (S.view === "theme") go("themes");
+  else if (S.view === "settings") go("home");
+}
+
+/* ---------- fenêtres ---------- */
+function openModal(sel) { $(sel).hidden = false; document.body.classList.add("locked"); }
+function closeModal(sel) {
+  $(sel).hidden = true;
+  if ($("#m-book").hidden && $("#m-compose").hidden && $("#m-actions").hidden) document.body.classList.remove("locked");
+}
+function autosize(el) { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight + 2, 560) + "px"; }
+
+/* ---------- fenêtre livre ---------- */
+$("#f-month").insertAdjacentHTML("beforeend", MONTHS.map((m, i) => `<option value="${String(i + 1).padStart(2, "0")}">${m.charAt(0).toUpperCase() + m.slice(1)}</option>`).join(""));
+function setFormDate(ym) {
+  const m = /^(\d{4})(?:-(\d{2}))?$/.exec(ym || "");
+  $("#f-month").value = m && m[2] ? m[2] : "";
+  $("#f-year").value = m ? m[1] : "";
+}
+function openBookForm(id) {
+  if (!S.ready) { toast("Le stockage du téléphone n'est pas accessible."); return; }
+  const b = id ? S.books.get(id) : null;
+  S.bookEdit = b ? id : null;
+  S.dateTouched = !!b;
+  $("#mb-title").textContent = b ? "Modifier la fiche" : "Nouveau livre";
+  $("#mb-submit").textContent = b ? "Enregistrer" : "Ajouter";
+  $("#f-title").value = b ? b.title : "";
+  $("#f-author").value = b ? (b.author || "") : "";
+  $("#f-pub").value = b ? pubLabel(b.published) : "";
+  const type = b && TYPES[b.type] ? b.type : (b ? "autre" : "essai");
+  $("#f-type-" + type).checked = true;
+  const st = b && STATUS[b.status] ? b.status : (b ? "a-lire" : "en-cours");
+  $("#f-st-" + st).checked = true;
+  if (b) { const p = readParts(b); setFormDate(p ? (p.m ? `${p.y}-${String(p.m).padStart(2, "0")}` : p.y) : ""); }
+  else setFormDate(currentYM());
+  $("#f-themes").value = b ? (b.themes || []).join(", ") : "";
+  $("#f-error").textContent = "";
+  openModal("#m-book");
+  $("#m-book .modal-box").scrollTop = 0;
+  setTimeout(() => { try { $("#f-title").focus(); } catch (_) {} }, 60);
+}
+function closeBookForm() { closeModal("#m-book"); S.bookEdit = null; }
+for (const r of document.querySelectorAll('input[name="fstatus"]')) {
+  r.addEventListener("change", () => {
+    if (S.dateTouched) return;
+    if (r.value === "a-lire") setFormDate(""); else if (!$("#f-year").value) setFormDate(currentYM());
+  });
+}
+$("#f-month").addEventListener("change", () => { S.dateTouched = true; });
+$("#f-year").addEventListener("input", () => { S.dateTouched = true; });
+
+$("#book-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const title = $("#f-title").value.trim();
+  if (!title) { $("#f-error").textContent = "Indiquez au moins le titre de l'ouvrage."; $("#f-title").focus(); return; }
+  const type = (document.querySelector('input[name="ftype"]:checked') || {}).value || "essai";
+  const status = (document.querySelector('input[name="fstatus"]:checked') || {}).value || "a-lire";
+  const pub = parsePub($("#f-pub").value);
+  if (!pub.ok) { $("#f-error").textContent = "Indiquez l'année de parution en chiffres, par exemple 1832, ou 431 av. J.-C."; $("#f-pub").focus(); return; }
+  const yRaw = $("#f-year").value.trim(), mRaw = $("#f-month").value;
+  let readOn = null;
+  if (yRaw || mRaw) {
+    if (!/^\d{4}$/.test(yRaw) || +yRaw < 1900 || +yRaw > 2100) {
+      $("#f-error").textContent = "Indiquez l'année de lecture sur quatre chiffres, par exemple 2023.";
+      $("#f-year").focus(); return;
+    }
+    readOn = mRaw ? `${yRaw}-${mRaw}` : yRaw;
+  }
+  const fields = {
+    title: title.slice(0, 300),
+    author: $("#f-author").value.trim().slice(0, 200),
+    published: pub.val,
+    type, status, readOn, finishedOn: null,
+    themes: parseThemes($("#f-themes").value)
+  };
+  if (S.bookEdit && S.books.has(S.bookEdit)) {
+    const id = S.bookEdit, old = S.books.get(id), nb = clone(old);
+    Object.assign(nb, fields);
+    if (old.type !== type) nb.cote = nextCote(type, id);
+    closeBookForm();
+    saveBook(id, nb).then(ok => ok && toast("Fiche mise à jour."));
+  } else {
+    const id = newId();
+    const book = Object.assign({ kind: "book", cote: nextCote(type), createdAt: new Date().toISOString(), quotes: [], notes: [], sources: [], inbox: [], synthesis: null }, fields);
+    closeBookForm();
+    S.tab = "quotes";
+    saveBook(id, book).then(ok => ok && toast("Livre ajouté. Notez vos premières citations avec la barre du bas."));
+    openBook(id);
+  }
+});
+
+/* ---------- avancement en un geste ---------- */
+function setStatus(id, st) {
+  const b = S.books.get(id);
+  if (!b || b.status === st || !STATUS[st]) return;
+  const prev = clone(b), nb = clone(b);
+  nb.status = st;
+  let msg = `Avancement : ${STATUS[st]}.`;
+  if (st === "lu") { nb.readOn = currentYM(); msg = `Marqué comme lu · signet posé à ${readLong(nb)}.`; }
+  else if (st === "en-cours" && !readParts(nb)) { nb.readOn = currentYM(); msg = `En cours · signet posé à ${readLong(nb)}.`; }
+  saveBook(id, nb).then(ok => ok && toast(msg, { label: "Annuler", fn: () => saveBook(id, prev) }));
+}
+
+/* ---------- fenêtre d'écriture et brouillons ---------- */
+const FORMS = {
+  quotes:  { fields: { text: "#q-text", page: "#q-page", comment: "#q-comment" }, title: "Nouvelle citation", editTitle: "Modifier la citation", required: "Recopiez la citation avant de l'ajouter.", added: "Citation ajoutée" },
+  notes:   { fields: { text: "#n-text", page: "#n-page" }, title: "Nouvelle note", editTitle: "Modifier la note", required: "Écrivez la note avant de l'ajouter.", added: "Note ajoutée" },
+  sources: { fields: { label: "#s-label", url: "#s-url", text: "#s-text" }, title: "Nouvelle source", editTitle: "Modifier la source", required: "Collez l'extrait de la source : Claude ne lit pas les liens seuls.", added: "Source ajoutée" }
+};
+const draftKey = (bookId, kind) => `cahier.draft.${bookId}.${kind}`;
+function draftGet(bookId, kind) { try { const v = JSON.parse(LS.get(draftKey(bookId, kind)) || "null"); return v && typeof v === "object" ? v : null; } catch (_) { return null; } }
+const draftSet = (bookId, kind, d) => LS.set(draftKey(bookId, kind), JSON.stringify(d));
+const draftDel = (bookId, kind) => LS.del(draftKey(bookId, kind));
+function readComposer() {
+  const c = S.composer, out = {};
+  if (!c) return out;
+  for (const [k, sel] of Object.entries(FORMS[c.kind].fields)) out[k] = $(sel).value;
+  return out;
+}
+const hasText = d => Object.values(d || {}).some(v => String(v || "").trim());
+function openComposer(kind, bookId, editId) {
+  const b = S.books.get(bookId);
+  if (!b || !FORMS[kind]) return;
+  closePhoto();
+  S.composer = { kind, bookId, editId: editId || null };
+  for (const k of KINDS) $("#grp-" + k).hidden = k !== kind;
+  const f = FORMS[kind];
+  for (const sel of Object.values(f.fields)) $(sel).value = "";
+  let restored = false;
+  if (editId) {
+    const it = (b[kind] || []).find(x => x.id === editId);
+    if (it) for (const [k, sel] of Object.entries(f.fields)) $(sel).value = it[k] || "";
+  } else {
+    const d = draftGet(bookId, kind);
+    if (hasText(d)) { for (const [k, sel] of Object.entries(f.fields)) $(sel).value = d[k] || ""; restored = true; }
+  }
+  $("#mc-title").textContent = editId ? f.editTitle : f.title;
+  $("#mc-submit").textContent = editId ? "Enregistrer" : "Ajouter";
+  $("#mc-book").textContent = b.title;
+  $("#mc-draft").hidden = !restored;
+  $("#mc-error").textContent = "";
+  $("#photo-entry").hidden = kind !== "quotes" || !!editId;
+  openModal("#m-compose");
+  $("#m-compose .modal-box").scrollTop = 0;
+  for (const ta of document.querySelectorAll("#grp-" + kind + " textarea")) autosize(ta);
+  setTimeout(() => { try { $(f.fields.text).focus({ preventScroll: true }); } catch (_) {} }, 60);
+}
+// Une page lue par Claude mais dont aucun passage n'a été repris est gardée « à trier » plutôt que perdue.
+function keepUnusedOcr() {
+  const o = S.ocr, c = S.composer;
+  if (!o || !c || o.fromInbox || o.used.size || !(o.paras.length || o.marked.length)) return false;
+  const b = S.books.get(c.bookId); if (!b) return false;
+  const nb = clone(b); nb.inbox = nb.inbox || [];
+  nb.inbox.push({ id: newId(), at: new Date().toISOString(), page: o.page, marked: o.marked, paras: o.paras, note: o.note });
+  saveBook(c.bookId, nb);
+  return true;
+}
+function closeComposer() {
+  const c = S.composer;
+  if (!c) return;
+  const kept = keepUnusedOcr();
+  let msg = kept ? "Page gardée dans la fiche, rubrique « Pages photographiées à trier »." : "";
+  if (!c.editId) {
+    const d = readComposer();
+    if (hasText(d)) { draftSet(c.bookId, c.kind, d); msg = msg || "Brouillon conservé : vous le retrouverez en rouvrant."; }
+    else draftDel(c.bookId, c.kind);
+  }
+  if (msg) toast(msg);
+  closePhoto();
+  S.composer = null;
+  closeModal("#m-compose");
+}
+let draftTimer;
+$("#compose-form").addEventListener("input", e => {
+  if (e.target.tagName === "TEXTAREA") autosize(e.target);
+  const c = S.composer;
+  if (!c || c.editId) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    if (S.composer !== c) return;
+    const d = readComposer();
+    if (hasText(d)) draftSet(c.bookId, c.kind, d); else draftDel(c.bookId, c.kind);
+  }, 300);
+});
+$("#compose-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const c = S.composer;
+  if (!c) return;
+  const f = FORMS[c.kind], vals = readComposer();
+  for (const k of Object.keys(vals)) vals[k] = vals[k].trim();
+  if (!vals.text) { $("#mc-error").textContent = f.required; $(f.fields.text).focus(); return; }
+  if (vals.text.length > 20000) { $("#mc-error").textContent = "Ce texte est trop long. Gardez l'essentiel (20 000 caractères au plus)."; return; }
+  const b = S.books.get(c.bookId);
+  if (!b) { $("#mc-error").textContent = "Ce livre n'existe plus dans votre cahier."; return; }
+  const nb = clone(b); nb[c.kind] = nb[c.kind] || [];
+  if (c.editId) { const it = nb[c.kind].find(x => x.id === c.editId); if (it) Object.assign(it, vals); }
+  else nb[c.kind].push(Object.assign({ id: newId(), at: new Date().toISOString() }, vals));
+  if (S.ocr && S.ocr.fromInbox && S.ocr.used.size) nb.inbox = (nb.inbox || []).filter(x => x.id !== S.ocr.fromInbox);
+  clearTimeout(draftTimer);
+  if (!c.editId) draftDel(c.bookId, c.kind);
+  closePhoto();
+  S.composer = null;
+  closeModal("#m-compose");
+  const here = S.view === "book" && S.current === c.bookId;
+  if (here) S.tab = c.kind;
+  const msg = c.editId ? "Modification enregistrée." : `${f.added}${here ? "" : ` à « ${b.title} »`}.`;
+  saveBook(c.bookId, nb).then(ok => ok && toast(msg));
+});
+function deleteItem(kind, id) {
+  const b = S.books.get(S.current); if (!b) return;
+  const nb = clone(b); nb[kind] = (nb[kind] || []).filter(x => x.id !== id);
+  saveBook(S.current, nb).then(ok => ok && toast("Supprimé."));
+}
+function armOrRun(btn, fn, label) {
+  if (btn.dataset.armed) { clearTimeout(btn._t); delete btn.dataset.armed; btn.classList.remove("armed"); fn(); return; }
+  btn.dataset.armed = "1"; btn.dataset.label = btn.innerHTML; btn.textContent = label || "Confirmer la suppression"; btn.classList.add("armed");
+  btn._t = setTimeout(() => { delete btn.dataset.armed; btn.innerHTML = btn.dataset.label; btn.classList.remove("armed"); }, 4000);
+}
+
+/* ---------- appel à l'API Claude ---------- */
+const ERR = {
+  no_key: "Ajoutez votre clé d'API Claude dans les Réglages pour utiliser cette fonction.",
+  bad_key: "La clé d'API est refusée. Vérifiez-la dans les Réglages.",
+  forbidden: "Cette clé d'API n'a pas accès à ce modèle. Choisissez un autre modèle dans les Réglages.",
+  no_credit: "Votre compte API Claude n'a plus de crédit. Rechargez-le sur la console Claude, puis relancez.",
+  rate_limited: "Trop de demandes en peu de temps. Réessayez dans une minute.",
+  overloaded: "Le service Claude est momentanément surchargé. Réessayez dans un instant.",
+  prompt_too_large: "Trop de matière d'un coup. Retirez ou raccourcissez une source collée, puis relancez.",
+  invalid_json: "La réponse de Claude était incomplète. Relancez.",
+  cancelled: "Demande arrêtée.",
+  offline: "Pas de réseau : la demande est en attente et partira dès le retour de la connexion."
+};
+const errText = e => ERR[e && e.code] || `Claude n'a pas pu traiter la demande${e && e.status ? ` (code ${e.status})` : ""}. Relancez dans un instant.`;
+const needsSettings = e => !!(e && ["no_key", "bad_key", "forbidden"].includes(e.code));
+function parseJsonLoose(text) {
+  const t = String(text || "").trim();
+  try { return JSON.parse(t); } catch (_) {}
+  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(t);
+  if (fence) { try { return JSON.parse(fence[1]); } catch (_) {} }
+  const i = t.search(/[\[{]/), j = Math.max(t.lastIndexOf("}"), t.lastIndexOf("]"));
+  if (i >= 0 && j > i) { try { return JSON.parse(t.slice(i, j + 1)); } catch (_) {} }
+  return undefined;
+}
+function blobToB64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+async function askClaude(prompt, opts = {}) {
+  if (!S.apiKey) throw { code: "no_key" };
+  if (!navigator.onLine) throw { code: "offline" };
+  const content = [];
+  for (const img of opts.images || []) {
+    const type = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(img.type) ? img.type : "image/jpeg";
+    content.push({ type: "image", source: { type: "base64", media_type: type, data: await blobToB64(img) } });
+  }
+  content.push({ type: "text", text: prompt + "\n\nRéponds uniquement par cet objet JSON, sans aucun texte avant ni après." });
+  let res;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", signal: opts.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": S.apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({ model: opts.model || S.model, max_tokens: opts.maxTokens || 2500, messages: [{ role: "user", content }] })
+    });
+  } catch (e) {
+    if (e && e.name === "AbortError") throw { code: "cancelled" };
+    throw { code: "offline" };
+  }
+  if (!res.ok) {
+    let msg = "";
+    try { const j = await res.json(); msg = (j && j.error && j.error.message) || ""; } catch (_) {}
+    const s = res.status;
+    throw { status: s, message: msg, code:
+      s === 401 ? "bad_key" : s === 403 ? "forbidden" : s === 413 ? "prompt_too_large" :
+      s === 429 ? "rate_limited" : (s === 529 || s >= 500) ? "overloaded" :
+      (s === 400 && /credit|balance|billing/i.test(msg)) ? "no_credit" :
+      (s === 400 && /too long|too large|exceed/i.test(msg)) ? "prompt_too_large" : "api_error" };
+  }
+  const j = await res.json();
+  const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
+  const val = parseJsonLoose(text);
+  if (val === undefined) throw { code: "invalid_json", text };
+  return val;
+}
+
+/* ---------- file d'attente hors réseau ---------- */
+async function enqueue(job) {
+  if (job.type !== "ocr" && S.jobs.some(j => j.type === job.type && j.bookId === job.bookId && j.theme === job.theme)) return;
+  const rec = Object.assign({ id: newId(), at: new Date().toISOString() }, job);
+  S.jobs.push(rec);
+  try { await idbPut("jobs", rec); } catch (_) {}
+  renderAll();
+}
+async function dropJob(id) {
+  S.jobs = S.jobs.filter(j => j.id !== id);
+  try { await idbDel("jobs", id); } catch (_) {}
+}
+async function processQueue() {
+  if (S.queueRunning || !S.jobs.length || !S.apiKey || !navigator.onLine) return;
+  S.queueRunning = true;
+  try {
+    for (const job of [...S.jobs]) {
+      let r;
+      if (job.type === "synth") r = await runSynth(job.bookId, true);
+      else if (job.type === "theme") r = await runThemeSynth(job.theme, true);
+      else if (job.type === "ocr") r = await runOcrJob(job);
+      if (r === "offline" || r === "busy" || r === "nokey") break;
+      await dropJob(job.id);
+      renderAll();
+    }
+  } finally {
+    S.queueRunning = false;
+    renderAll();
+  }
+}
+
+/* ---------- synthèse d'un livre ---------- */
+function buildPrompt(b) {
+  const t = b.type;
+  const goal = t === "essai"
+    ? "C'est un essai : l'idée maîtresse est la thèse centrale de l'auteur et l'argument principal qui la porte. Les points clés sont les arguments ou les étapes du raisonnement."
+    : t === "litterature"
+      ? "C'est une œuvre littéraire : l'idée maîtresse est le sens de l'œuvre, ce qu'elle donne à comprendre ou à éprouver. Les points clés sont ses thèmes et ses ressorts (situation, personnages, forme, ton)."
+      : "Le type d'ouvrage n'est pas précisé : choisis la lecture qui convient (thèse d'un essai ou sens d'une œuvre).";
+  const cap = (s, n) => (s || "").length > n ? s.slice(0, n) + " […]" : (s || "");
+  const quotes = (b.quotes || []).map((q, i) => `[C${i + 1}]${q.page ? ` (p. ${q.page})` : ""} « ${cap(q.text, 3000)} »${q.comment ? `\n   Commentaire du lecteur : ${cap(q.comment, 1500)}` : ""}`).join("\n");
+  const notes = (b.notes || []).map((n, i) => `[N${i + 1}]${n.page ? ` (p. ${n.page})` : ""} ${cap(n.text, 4000)}`).join("\n");
+  const sources = (b.sources || []).map((s, i) => `[S${i + 1}] ${s.label || "Source"}${s.url ? ` (${s.url})` : ""}\n${cap(s.text, 8000)}`).join("\n\n");
+  const spoil = b.status !== "lu" && t !== "essai" ? "\nLe lecteur n'a pas fini ce livre : ne révèle pas la fin ni les retournements qu'il n'a pas encore lus." : "";
+  return `Tu aides un lecteur à tenir son cahier de lecture. À partir de la matière ci-dessous, établis l'idée maîtresse de l'ouvrage.
+
+OUVRAGE
+Titre : ${b.title}
+Auteur : ${b.author || "non renseigné"}
+Première parution : ${pubLabel(b.published) || "non renseignée"}
+Type : ${(TYPES[t] || TYPES.autre).label}
+Avancement : ${STATUS[b.status] || "non précisé"}
+Thèmes notés par le lecteur : ${(b.themes || []).join(", ") || "aucun"}
+
+CITATIONS RELEVÉES PAR LE LECTEUR
+${quotes || "(aucune)"}
+
+NOTES DU LECTEUR
+${notes || "(aucune)"}
+
+SOURCES EXTERNES COLLÉES PAR LE LECTEUR
+${sources || "(aucune)"}
+
+CONSIGNES
+${goal}${spoil}
+1. Appuie-toi d'abord sur les citations et les notes du lecteur : c'est ce qu'il a retenu. Puis sur les sources externes qu'il a collées. Complète avec ta connaissance générale de l'ouvrage seulement si tu le connais avec certitude.
+2. Si tu ne connais pas cet ouvrage, ou pas assez pour en être sûr, indique "ouvrageConnu": false et n'invente rien : appuie-toi uniquement sur la matière fournie. S'il n'y a presque aucune matière, dis-le dans le développement.
+3. N'invente aucune citation. "citationCle" reprend mot pour mot l'une des citations du lecteur, sans guillemets, ou reste une chaîne vide.
+4. Si les notes du lecteur s'écartent de la lecture courante de l'ouvrage, signale-le avec tact dans "aCreuser", sans trancher à sa place.
+5. Écris en français, en phrases complètes et claires, sans jargon inutile.
+6. "anneeParution" est l'année de première publication de l'œuvre originale (ni une traduction, ni une réédition), en nombre entier, négatif avant J.-C. Donne-la seulement si tu en es certain ; sinon mets null.
+
+Réponds uniquement par un objet JSON de cette forme :
+{"phrase":"l'idée maîtresse en une seule phrase de 35 mots au plus","developpement":"2 à 4 phrases qui expliquent l'idée et la façon dont l'ouvrage la construit","points":["3 à 5 points clés, une phrase courte chacun"],"citationCle":"une citation du lecteur, mot pour mot, ou une chaîne vide","motsCles":["3 à 5 thèmes courts, en minuscules"],"aCreuser":"une question ou une piste que la lecture laisse ouverte, en une phrase","ouvrageConnu":true,"partConnaissanceGenerale":"aucune, faible ou importante","anneeParution":"l'année en nombre entier (par exemple 1940), ou null"}`;
+}
+function validateSynth(r, b) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const str = v => typeof v === "string" ? v.trim() : "";
+  const arr = v => Array.isArray(v) ? v.map(str).filter(Boolean) : [];
+  const phrase = str(r.phrase);
+  if (!phrase) return null;
+  let key = str(r.citationCle).replace(/^[«"“\s]+|[»"”\s]+$/g, "");
+  if (key) { const k = squash(key); if (!k || !(b.quotes || []).some(q => squash(q.text).includes(k))) key = ""; }
+  const partRaw = norm(str(r.partConnaissanceGenerale));
+  const part = ["aucune", "faible", "importante"].includes(partRaw) ? partRaw : "faible";
+  const yr = parsePub(typeof r.anneeParution === "number" ? String(Math.trunc(r.anneeParution)) : str(r.anneeParution)).val;
+  return {
+    anneeParution: r.ouvrageConnu !== false ? yr : null,
+    phrase, developpement: str(r.developpement),
+    points: arr(r.points).slice(0, 6),
+    citationCle: key,
+    motsCles: [...new Set(arr(r.motsCles).map(s => s.toLowerCase().slice(0, 40)))].slice(0, 6),
+    aCreuser: str(r.aCreuser),
+    ouvrageConnu: r.ouvrageConnu !== false,
+    part, at: new Date().toISOString(),
+    basis: { quotes: (b.quotes || []).length, notes: (b.notes || []).length, sources: (b.sources || []).length, sig: sig(b) }
+  };
+}
+async function runSynth(id, fromQueue) {
+  const b = S.books.get(id);
+  if (!b) return "gone";
+  if (S.synth) return "busy";
+  if (!S.apiKey) { if (!fromQueue) { S.synthMsg = { id, text: ERR.no_key, settings: true }; renderAll(); } return "nokey"; }
+  if (!navigator.onLine) {
+    if (!fromQueue) { await enqueue({ type: "synth", bookId: id }); toast(ERR.offline); }
+    return "offline";
+  }
+  const ctl = new AbortController();
+  S.synth = { id, ctl }; S.synthMsg = null; renderAll();
+  try {
+    const r = await askClaude(buildPrompt(b), { signal: ctl.signal, maxTokens: 2500 });
+    const syn = validateSynth(r, b);
+    if (!syn) throw { code: "invalid_json" };
+    const cur = S.books.get(id);
+    if (cur) {
+      const nb = clone(cur); nb.synthesis = syn;
+      S.synth = null;
+      if (S.current === id) S.ideaOpen = true;
+      await saveBook(id, nb);
+      toast(fromQueue ? `Idée maîtresse établie pour « ${cur.title} ».` : "Idée maîtresse établie.");
+    }
+    return "ok";
+  } catch (e) {
+    if (e && e.code === "offline") {
+      if (!fromQueue) { await enqueue({ type: "synth", bookId: id }); toast(ERR.offline); }
+      return "offline";
+    }
+    S.synthMsg = { id, text: errText(e), settings: needsSettings(e) };
+    if (fromQueue && e.code !== "cancelled") toast(`Idée maîtresse de « ${b.title} » : ${errText(e)}`);
+    return needsSettings(e) ? "nokey" : "error";
+  } finally {
+    S.synth = null;
+    renderAll();
+    if (!fromQueue && S.jobs.length) setTimeout(processQueue, 800);
+  }
+}
+function addKeyword(k) {
+  const b = S.books.get(S.current); if (!b) return;
+  const nb = clone(b); nb.themes = nb.themes || [];
+  if (!nb.themes.includes(k)) nb.themes.push(k);
+  saveBook(S.current, nb).then(ok => ok && toast(`Thème « ${k} » ajouté.`));
+}
+
+/* ---------- thèmes croisés ---------- */
+function themePrompt(theme, entries) {
+  const refs = new Map();
+  const cap = (s, n) => (s || "").length > n ? s.slice(0, n) + " […]" : (s || "");
+  const blocks = entries.slice(0, 12).map(({ id, b }, i) => {
+    const L = `L${i + 1}`, s = b.synthesis;
+    const qs = (b.quotes || []).slice(-8).map((q, j) => {
+      const ref = `${L}-C${j + 1}`;
+      refs.set(ref, { bookId: id, title: b.title, text: q.text, page: q.page || "" });
+      return `  [${ref}]${q.page ? ` (p. ${q.page})` : ""} « ${cap(q.text, 600)} »${q.comment ? ` · commentaire : ${cap(q.comment, 300)}` : ""}`;
+    }).join("\n");
+    const ns = (b.notes || []).slice(-6).map(n => `  - ${cap(n.text, 500)}`).join("\n");
+    return `[${L}] ${b.title}${b.author ? `, ${b.author}` : ""}${pubLabel(b.published) ? ` (${pubLabel(b.published)})` : ""} · ${(TYPES[b.type] || TYPES.autre).label} · ${STATUS[b.status] || ""}
+Idée maîtresse : ${s && s.phrase ? s.phrase + (s.developpement ? " " + cap(s.developpement, 800) : "") : "pas encore établie"}
+Citations relevées :
+${qs || "  (aucune)"}
+Notes du lecteur :
+${ns || "  (aucune)"}`;
+  }).join("\n\n");
+  const prompt = `Tu aides un lecteur à faire dialoguer ses lectures autour d'un thème de son cahier : « ${theme} ».
+Voici les ouvrages de son cahier qui portent ce thème, avec ce qu'il en a retenu.
+
+${blocks}
+
+CONSIGNES
+1. Montre ce que ces ouvrages disent ensemble du thème : ce qu'ils partagent, ce qui les oppose ou les distingue, ce que l'un apporte que les autres n'ont pas.
+2. Appuie-toi d'abord sur les citations, les notes et les idées maîtresses du lecteur. Complète avec ta connaissance des ouvrages seulement si tu les connais avec certitude, sans rien inventer.
+3. Pour citer, n'écris pas les citations : donne seulement leurs références, par exemple "L1-C2". Choisis au plus quatre citations qui se répondent.
+4. Dans le texte, nomme les ouvrages par leur titre, jamais par leur référence.
+5. Écris en français, en phrases complètes et claires. Pour un roman que le lecteur n'a pas fini, ne révèle pas la fin.
+
+Réponds uniquement par un objet JSON de cette forme :
+{"these":"en une phrase de 40 mots au plus, ce que ces lectures disent ensemble du thème","synthese":"deux ou trois paragraphes séparés par une ligne vide","convergences":["2 à 4 points communs, une phrase chacun"],"divergences":["1 à 4 différences ou tensions, une phrase chacune"],"citations":["L1-C2","L2-C1"],"question":"une question ouverte pour prolonger la réflexion"}`;
+  return { prompt, refs };
+}
+function validateTheme(r, refs) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const clean = v => typeof v === "string" ? v.replace(/\s?\[L\d+(?:-C\d+)?\]/g, "").trim() : "";
+  const arr = v => Array.isArray(v) ? v.map(clean).filter(Boolean) : [];
+  const these = clean(r.these);
+  if (!these) return null;
+  const seen = new Set(), cites = [];
+  for (const c of (Array.isArray(r.citations) ? r.citations : [])) {
+    const key = String(c || "").replace(/[\[\]\s]/g, "").toUpperCase();
+    const q = refs.get(key);
+    if (q && !seen.has(key)) { seen.add(key); cites.push(q); }
+    if (cites.length >= 4) break;
+  }
+  return { these, synthese: clean(r.synthese), convergences: arr(r.convergences).slice(0, 5), divergences: arr(r.divergences).slice(0, 5), citations: cites, question: clean(r.question) };
+}
+async function runThemeSynth(t, fromQueue) {
+  const entries = t ? booksWithTheme(t) : [];
+  if (!t || entries.length < 2) return "gone";
+  if (S.tsynth) return "busy";
+  if (!S.apiKey) { if (!fromQueue) { S.tsynthMsg = { theme: t, text: ERR.no_key, settings: true }; renderAll(); } return "nokey"; }
+  if (!navigator.onLine) {
+    if (!fromQueue) { await enqueue({ type: "theme", theme: t }); toast(ERR.offline); }
+    return "offline";
+  }
+  const ctl = new AbortController();
+  S.tsynth = { theme: t, ctl }; S.tsynthMsg = null; renderAll();
+  try {
+    const { prompt, refs } = themePrompt(t, entries);
+    const r = await askClaude(prompt, { signal: ctl.signal, maxTokens: 3500 });
+    const res = validateTheme(r, refs);
+    if (!res) throw { code: "invalid_json" };
+    const doc = { kind: "theme", theme: t, result: res, at: new Date().toISOString(), basis: { ids: entries.map(e => e.id), sig: themeSig(t) } };
+    S.tsynth = null;
+    await saveDoc(themeDocId(t), doc);
+    toast(fromQueue ? `Synthèse croisée établie pour « ${t} ».` : "Synthèse croisée établie.");
+    return "ok";
+  } catch (e) {
+    if (e && e.code === "offline") {
+      if (!fromQueue) { await enqueue({ type: "theme", theme: t }); toast(ERR.offline); }
+      return "offline";
+    }
+    S.tsynthMsg = { theme: t, text: errText(e), settings: needsSettings(e) };
+    if (fromQueue && e.code !== "cancelled") toast(`Thème « ${t} » : ${errText(e)}`);
+    return needsSettings(e) ? "nokey" : "error";
+  } finally {
+    S.tsynth = null;
+    renderAll();
+    if (!fromQueue && S.jobs.length) setTimeout(processQueue, 800);
+  }
+}
+
+/* ---------- photo d'une page : transcription par Claude ---------- */
+async function prepareImage(file) {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const k = Math.min(1, 1568 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.88));
+    return blob || file;
+  } catch (_) { return file; }
+}
+function ocrPrompt(b) {
+  return `Voici la photo d'une page du livre « ${b.title} »${b.author ? ` de ${b.author}` : ""}. Le lecteur veut en tirer une citation.
+
+1. Transcris fidèlement le texte imprimé de la page, paragraphe par paragraphe, mot pour mot, sans corriger, résumer ni moderniser. Recolle les mots coupés en fin de ligne. Ignore le titre courant en haut ou en bas de page. Si un mot est illisible, écris [illisible]. N'ajoute aucun mot absent de la page.
+2. Repère les passages que le lecteur a marqués à la main : surlignés, soulignés, encadrés, ou signalés par un trait ou un signe dans la marge. Transcris chacun mot pour mot. Si le marquage commence ou s'arrête au milieu d'une phrase, étends le passage aux limites de la phrase. Ne compte pas les mots imprimés en italique ou en gras comme des marques du lecteur.
+3. Relève le numéro de page imprimé s'il est visible.
+4. Si la photo est floue, de biais, coupée, ou si ce n'est pas une page de texte, dis-le dans "remarque" et mets "lisible": false si le texte ne peut pas être transcrit de façon fiable.
+
+Réponds uniquement par un objet JSON de cette forme :
+{"lisible":true,"page":"numéro imprimé, ou chaîne vide","passagesMarques":[{"texte":"passage marqué, mot pour mot","marque":"surligné, souligné, encadré ou trait en marge"}],"paragraphes":["chaque paragraphe de la page, mot pour mot"],"remarque":"une phrase si la photo pose un problème, sinon chaîne vide"}`;
+}
+function validateOcr(r) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const str = v => typeof v === "string" ? v.trim() : "";
+  const paras = (Array.isArray(r.paragraphes) ? r.paragraphes : []).map(str).filter(Boolean).slice(0, 60);
+  const marked = (Array.isArray(r.passagesMarques) ? r.passagesMarques : [])
+    .map(m => ({ text: str(m && m.texte), mark: str(m && m.marque) })).filter(m => m.text).slice(0, 20);
+  const page = str(r.page).replace(/^p(age)?\.?\s*/i, "").slice(0, 12);
+  return { lisible: r.lisible !== false, page, marked, paras, note: str(r.remarque), used: new Set() };
+}
+function setPhotoStatus(html) { $("#photo-status").innerHTML = html; }
+function setThumb(blob) {
+  if (S.thumbUrl) { try { URL.revokeObjectURL(S.thumbUrl); } catch (_) {} S.thumbUrl = null; }
+  const img = $("#photo-thumb");
+  if (!blob) { img.hidden = true; img.removeAttribute("src"); return; }
+  try { S.thumbUrl = URL.createObjectURL(blob); img.src = S.thumbUrl; img.hidden = false; } catch (_) { img.hidden = true; }
+}
+function closePhoto() {
+  if (S.ocrCtl) { S.ocrCtl.abort(); S.ocrCtl = null; }
+  S.ocr = null; S.lastSel = "";
+  setThumb(null);
+  $("#photo-result").innerHTML = ""; setPhotoStatus("");
+  $("#photo-stop").hidden = true;
+  $("#photo-drop").hidden = true;
+  $("#photo-panel").hidden = true;
+}
+function renderOcr() {
+  const o = S.ocr, box = $("#photo-result");
+  if (!o) { box.innerHTML = ""; return; }
+  const pageTxt = o.page ? ` · p. ${esc(o.page)}` : "";
+  const picks = o.marked.length ? `
+    <p class="label">Passages marqués${pageTxt}</p>
+    <ul class="picks">${o.marked.map((m, i) => `
+      <li class="pick">
+        <blockquote><span class="hl">${esc(m.text)}</span></blockquote>
+        <div class="pick-meta"><span>${esc(m.mark || "marqué")}</span>${o.used.has("m" + i)
+          ? '<span class="used">Repris</span>'
+          : `<button class="link" type="button" data-pick="m${i}">Reprendre comme citation</button>`}</div>
+      </li>`).join("")}</ul>` : "";
+  const paras = o.paras.length ? `
+    <details class="transcript"${o.marked.length ? "" : " open"}>
+      <summary>Texte complet de la page${o.marked.length ? "" : pageTxt}</summary>
+      <div class="transcript-body">
+        <p class="help">Touchez « Reprendre ce paragraphe », ou sélectionnez une phrase du doigt puis touchez « Reprendre la sélection ».</p>
+        <div class="transcript-text" id="photo-text">${o.paras.map((p, i) => `
+          <div class="para"><p>${esc(p)}</p>${o.used.has("p" + i)
+            ? '<span class="used">Repris</span>'
+            : `<button class="link" type="button" data-pick="p${i}">Reprendre ce paragraphe</button>`}</div>`).join("")}</div>
+        <button class="btn ghost small" type="button" data-act="pick-selection">Reprendre la sélection</button>
+      </div>
+    </details>` : "";
+  const note = o.note ? `<p class="caution">${esc(o.note)}</p>` : "";
+  box.innerHTML = picks + paras + note;
+}
+function useOcrText(text, key) {
+  const ta = $("#q-text");
+  ta.value = text; ta.dispatchEvent(new Event("input", { bubbles: true }));
+  if (S.ocr && S.ocr.page) $("#q-page").value = S.ocr.page;
+  if (key && S.ocr) { S.ocr.used.add(key); renderOcr(); }
+  $("#mc-error").textContent = "";
+  setPhotoStatus("Passage repris ci-dessous. Relisez-le, corrigez si besoin, puis touchez « Ajouter ».");
+  ta.scrollIntoView({ block: "center", behavior: "smooth" });
+  setTimeout(() => { try { ta.focus({ preventScroll: true }); } catch (_) {} }, 300);
+}
+function ocrStatus(o) {
+  if (!o.lisible && !o.paras.length && !o.marked.length) return "Le texte n'a pas pu être lu de façon fiable. Reprenez la photo de face, bien éclairée, avec une seule page dans le cadre.";
+  if (o.marked.length) return `${o.marked.length > 1 ? `${o.marked.length} passages marqués trouvés` : "Un passage marqué trouvé"}. Touchez celui à garder${o.paras.length ? ", ou ouvrez le texte complet" : ""}.`;
+  return "Aucun passage marqué sur cette page. Choisissez un paragraphe ou sélectionnez une phrase dans le texte transcrit.";
+}
+async function runOcr(file) {
+  const c = S.composer, b = c && S.books.get(c.bookId);
+  if (!b || !file) return;
+  if (S.ocrCtl) S.ocrCtl.abort();
+  const ctl = new AbortController(); S.ocrCtl = ctl;
+  S.ocr = null; S.lastSel = ""; renderOcr();
+  $("#photo-panel").hidden = false; $("#photo-stop").hidden = false; $("#photo-drop").hidden = true;
+  setPhotoStatus(`<span class="pulse" aria-hidden="true"></span>Préparation de la photo…`);
+  const img = await prepareImage(file);
+  if (ctl.signal.aborted) return;
+  setThumb(img);
+  const queueIt = async () => {
+    await enqueue({ type: "ocr", bookId: c.bookId, blob: img });
+    setPhotoStatus("Pas de réseau : la photo est gardée et Claude la lira dès le retour de la connexion. Vous retrouverez la page dans la fiche, rubrique « Pages photographiées à trier ».");
+  };
+  if (!S.apiKey) {
+    S.ocrCtl = null; $("#photo-stop").hidden = true;
+    setPhotoStatus(`${esc(ERR.no_key)} <button class="link" type="button" data-act="settings">Ouvrir les réglages</button>`);
+    return;
+  }
+  if (!navigator.onLine) { S.ocrCtl = null; $("#photo-stop").hidden = true; await queueIt(); return; }
+  setPhotoStatus(`<span class="pulse" aria-hidden="true"></span>Claude lit la page et cherche vos passages soulignés ou surlignés. Comptez de dix secondes à une minute.`);
+  try {
+    const r = await askClaude(ocrPrompt(b), { images: [img], signal: ctl.signal, maxTokens: 6000 });
+    if (S.ocrCtl !== ctl) return;
+    const o = validateOcr(r);
+    if (!o) throw { code: "invalid_json" };
+    S.ocr = o; renderOcr();
+    setPhotoStatus(ocrStatus(o));
+  } catch (e) {
+    if (S.ocrCtl !== ctl) return;
+    if (e && e.code === "offline") await queueIt();
+    else setPhotoStatus(e && e.code === "cancelled" ? "Lecture arrêtée." : esc(errText(e)) + (needsSettings(e) ? ' <button class="link" type="button" data-act="settings">Ouvrir les réglages</button>' : ""));
+  } finally {
+    if (S.ocrCtl === ctl) { S.ocrCtl = null; $("#photo-stop").hidden = true; }
+  }
+}
+async function runOcrJob(job) {
+  const b = S.books.get(job.bookId);
+  if (!b || !job.blob) return "gone";
+  try {
+    const r = await askClaude(ocrPrompt(b), { images: [job.blob], maxTokens: 6000 });
+    const o = validateOcr(r);
+    if (!o) throw { code: "invalid_json" };
+    const cur = S.books.get(job.bookId);
+    if (cur) {
+      const nb = clone(cur); nb.inbox = nb.inbox || [];
+      nb.inbox.push({ id: newId(), at: job.at, page: o.page, marked: o.marked, paras: o.paras, note: o.note });
+      await saveBook(job.bookId, nb);
+      toast(`Page lue pour « ${cur.title} » : passages à trier dans la fiche.`);
+    }
+    return "ok";
+  } catch (e) {
+    if (e && e.code === "offline") return "offline";
+    toast(`Photo pour « ${b.title} » : ${errText(e)}`);
+    return needsSettings(e) ? "nokey" : "error";
+  }
+}
+function openInbox(entryId) {
+  const b = S.books.get(S.current); if (!b) return;
+  const it = (b.inbox || []).find(x => x.id === entryId); if (!it) return;
+  openComposer("quotes", S.current);
+  S.ocr = { lisible: true, page: it.page || "", marked: it.marked || [], paras: it.paras || [], note: it.note || "", used: new Set(), fromInbox: it.id };
+  $("#photo-panel").hidden = false; $("#photo-drop").hidden = false; setThumb(null);
+  renderOcr();
+  setPhotoStatus(`Page photographiée le ${esc(fmtDate(it.at))}. ${esc(ocrStatus(S.ocr))}`);
+}
+function dropInbox(bookId, entryId) {
+  const b = S.books.get(bookId); if (!b) return;
+  const nb = clone(b); nb.inbox = (nb.inbox || []).filter(x => x.id !== entryId);
+  saveBook(bookId, nb).then(ok => ok && toast("Page retirée."));
+}
+function onPhotoChosen(e) {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  const pf = S.photoFor;
+  const id = pf === "compose" ? (S.composer && S.composer.bookId) : (pf === "current" || !pf) ? S.current : pf;
+  if (!id || !S.books.has(id)) return;
+  if (!S.composer || S.composer.kind !== "quotes" || S.composer.bookId !== id || S.composer.editId) openComposer("quotes", id);
+  runOcr(f);
+}
+$("#photo-camera").addEventListener("change", onPhotoChosen);
+$("#photo-gallery").addEventListener("change", onPhotoChosen);
+document.addEventListener("selectionchange", () => {
+  const box = document.getElementById("photo-text");
+  const sel = window.getSelection && window.getSelection();
+  if (!box || !sel || sel.isCollapsed) return;
+  if (box.contains(sel.anchorNode) && box.contains(sel.focusNode)) {
+    const t = sel.toString().replace(/Reprendre ce paragraphe|Repris/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    if (t) S.lastSel = t;
+  }
+});
+
+/* ---------- partage en Word (.docx) ---------- */
+const xmlEsc = s => String(s == null ? "" : s)
+  .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, "")
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function wRuns(text, rpr) {
+  const pr = rpr ? `<w:rPr>${rpr}</w:rPr>` : "";
+  return String(text == null ? "" : text).split("\n")
+    .map((line, i) => `${i ? `<w:r>${pr}<w:br/></w:r>` : ""}<w:r>${pr}<w:t xml:space="preserve">${xmlEsc(line)}</w:t></w:r>`).join("");
+}
+const wPara = (style, text, rpr) => `<w:p>${style ? `<w:pPr><w:pStyle w:val="${style}"/></w:pPr>` : ""}${wRuns(text, rpr)}</w:p>`;
+const wLabelled = (style, label, text) => `<w:p>${style ? `<w:pPr><w:pStyle w:val="${style}"/></w:pPr>` : ""}${wRuns(label, "<w:b/>")}${wRuns(text)}</w:p>`;
+const W_PAGE_BREAK = `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+
+function bookXml(b, single) {
+  const t = TYPES[b.type] || TYPES.autre, s = b.synthesis, x = [];
+  x.push(wPara(single ? "Title" : "Heading1", b.title));
+  if (b.author) x.push(wPara("Subtitle", b.author));
+  const meta = [b.cote, t.label, pubLabel(b.published) ? `Première parution : ${pubLabel(b.published)}` : "", STATUS[b.status], readLong(b) ? `Lecture : ${readLong(b)}` : ""].filter(Boolean).join(" · ");
+  x.push(wPara("Meta", meta));
+  if ((b.themes || []).length) x.push(wPara("Meta", `Thèmes : ${b.themes.join(", ")}`));
+  x.push(wPara("Heading2", "Idée maîtresse"));
+  if (s && s.phrase) {
+    x.push(wPara("Idea", s.phrase));
+    if (s.developpement) x.push(wPara(null, s.developpement));
+    if ((s.points || []).length) { x.push(wPara("Label", t.points)); for (const p of s.points) x.push(wPara("Bullet", "• " + p)); }
+    if (s.citationCle) { x.push(wPara("Label", "Citation clé")); x.push(wPara("Quote", s.citationCle)); }
+    if (s.aCreuser) x.push(wLabelled(null, "À creuser : ", s.aCreuser));
+    const bs = s.basis || {};
+    x.push(wPara("Meta", `Établie par Claude le ${fmtDate(s.at)} à partir de ${plural(bs.quotes || 0, "citation")}, ${plural(bs.notes || 0, "note")} et ${plural(bs.sources || 0, "source externe", "sources externes")}.` +
+      (s.ouvrageConnu === false ? " Ouvrage inconnu de Claude : synthèse fondée sur la seule matière du lecteur." : "")));
+  } else {
+    x.push(wPara("Note", "Idée maîtresse pas encore établie."));
+  }
+  const q = b.quotes || [], n = b.notes || [], src = b.sources || [];
+  if (q.length) {
+    x.push(wPara("Heading2", `Citations (${q.length})`));
+    for (const it of q) {
+      x.push(wPara("Quote", it.text));
+      const m = [it.page ? `p. ${cleanPage(it.page)}` : "", it.at ? `relevée le ${fmtDate(it.at)}` : ""].filter(Boolean).join(" · ");
+      if (m) x.push(wPara("QuoteMeta", m));
+      if (it.comment) x.push(wLabelled("Comment", "Commentaire : ", it.comment));
+    }
+  }
+  if (n.length) {
+    x.push(wPara("Heading2", `Notes (${n.length})`));
+    for (const it of n) {
+      x.push(wPara(null, it.text));
+      const m = [it.page ? `p. ${cleanPage(it.page)}` : "", it.at ? fmtDate(it.at) : ""].filter(Boolean).join(" · ");
+      if (m) x.push(wPara("Meta", m));
+    }
+  }
+  if (src.length) {
+    x.push(wPara("Heading2", `Sources externes (${src.length})`));
+    for (const it of src) {
+      x.push(wPara("SourceLabel", it.label || "Source externe"));
+      if (it.url) x.push(wPara("Meta", it.url));
+      if (it.text) x.push(wPara(null, it.text));
+    }
+  }
+  return x.join("");
+}
+function themeXml(doc) {
+  const r = doc.result, x = [wPara("Heading2", doc.theme), wPara("Idea", r.these)];
+  for (const p of String(r.synthese || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)) x.push(wPara(null, p));
+  if ((r.convergences || []).length) { x.push(wPara("Label", "Convergences")); for (const c of r.convergences) x.push(wPara("Bullet", "• " + c)); }
+  if ((r.divergences || []).length) { x.push(wPara("Label", "Tensions et différences")); for (const c of r.divergences) x.push(wPara("Bullet", "• " + c)); }
+  for (const c of (r.citations || [])) { x.push(wPara("Quote", c.text)); x.push(wPara("QuoteMeta", `${c.title}${c.page ? `, p. ${cleanPage(c.page)}` : ""}`)); }
+  if (r.question) x.push(wLabelled(null, "Pour prolonger : ", r.question));
+  return x.join("");
+}
+
+const W_STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia" w:eastAsia="Georgia" w:cs="Georgia"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>
+<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:spacing w:after="60"/></w:pPr><w:rPr><w:b/><w:color w:val="3B4220"/><w:sz w:val="48"/><w:szCs w:val="48"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Subtitle"><w:name w:val="Subtitle"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:spacing w:after="80"/></w:pPr><w:rPr><w:i/><w:color w:val="5E6248"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="60"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:color w:val="3B4220"/><w:sz w:val="36"/><w:szCs w:val="36"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="B4513F"/></w:pBdr><w:spacing w:before="320" w:after="120"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:caps/><w:spacing w:val="10"/><w:color w:val="3B4220"/><w:sz w:val="21"/><w:szCs w:val="21"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Meta"><w:name w:val="Métadonnées"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="80"/></w:pPr><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New" w:cs="Courier New"/><w:color w:val="6B6F58"/><w:sz w:val="17"/><w:szCs w:val="17"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Idea"><w:name w:val="Idée maîtresse"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="160"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Label"><w:name w:val="Intitulé"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="60"/></w:pPr><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New" w:cs="Courier New"/><w:caps/><w:color w:val="6B6F58"/><w:sz w:val="17"/><w:szCs w:val="17"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Bullet"><w:name w:val="Point clé"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="60"/><w:ind w:left="357" w:hanging="221"/></w:pPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Quote"><w:name w:val="Citation relevée"/><w:basedOn w:val="Normal"/><w:pPr><w:pBdr><w:left w:val="single" w:sz="18" w:space="10" w:color="8A9450"/></w:pBdr><w:ind w:left="284"/><w:spacing w:before="160" w:after="40"/></w:pPr><w:rPr><w:i/><w:sz w:val="23"/><w:szCs w:val="23"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="QuoteMeta"><w:name w:val="Référence de citation"/><w:basedOn w:val="Meta"/><w:pPr><w:ind w:left="284"/></w:pPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Comment"><w:name w:val="Commentaire"/><w:basedOn w:val="Normal"/><w:pPr><w:ind w:left="284"/></w:pPr><w:rPr><w:color w:val="44482F"/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="Note"><w:name w:val="Mention"/><w:basedOn w:val="Normal"/><w:rPr><w:i/><w:color w:val="6B6F58"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:customStyle="1" w:styleId="SourceLabel"><w:name w:val="Source"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="20"/></w:pPr><w:rPr><w:b/></w:rPr></w:style>
+</w:styles>`;
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+// Archive ZIP sans compression : suffisant pour un fichier Word et sans dépendance externe.
+function zipStore(files, mime) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  const d = new Date();
+  const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | Math.floor(d.getSeconds() / 2);
+  const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(4, 0, true); end.setUint16(6, 0, true);
+  end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true); end.setUint16(20, 0, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: mime });
+}
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+function docxBlob(title, bodyXml) {
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${bodyXml}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1304" w:right="1304" w:bottom="1304" w:left="1304" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const created = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  return zipStore([
+    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>` },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>` },
+    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name: "word/document.xml", data: doc },
+    { name: "word/styles.xml", data: W_STYLES },
+    { name: "docProps/core.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xmlEsc(title)}</dc:title><dc:creator>Cahier de lecture</dc:creator><dc:language>fr-FR</dc:language><dcterms:created xsi:type="dcterms:W3CDTF">${created}</dcterms:created></cp:coreProperties>` }
+  ], DOCX_MIME);
+}
+const byCote = (a, b) => String(a.cote || "").localeCompare(String(b.cote || ""), "fr");
+function crossedThemes() {
+  return [...S.themeDocs.values()].filter(t => t.result && booksWithTheme(t.theme).length).sort((a, b) => a.theme.localeCompare(b.theme, "fr"));
+}
+function bookDocx(b) {
+  return docxBlob(`${b.title} · fiche de lecture`, bookXml(b, true) + wPara("Meta", `Fiche partagée depuis le Cahier de lecture, le ${fmtDate(new Date().toISOString())}.`));
+}
+function libraryDocx() {
+  const books = [...S.books.values()].sort(byCote);
+  const x = [
+    wPara("Title", "Cahier de lecture"),
+    wPara("Subtitle", plural(books.length, "ouvrage")),
+    wPara("Meta", `Partagé le ${fmtDate(new Date().toISOString())}`),
+    wPara("Heading2", "Sommaire")
+  ];
+  for (const b of books) {
+    const head = `${b.cote || ""} · ${b.title}${b.author ? `, ${b.author}` : ""}${pubLabel(b.published) ? ` (${pubLabel(b.published)})` : ""}${readLong(b) ? `, lecture : ${readLong(b)}` : ""}`;
+    x.push(wLabelled("Bullet", "• " + head, b.synthesis && b.synthesis.phrase ? ` : ${b.synthesis.phrase}` : ""));
+  }
+  for (const b of books) x.push(W_PAGE_BREAK, bookXml(b, false));
+  const crossed = crossedThemes();
+  if (crossed.length) { x.push(W_PAGE_BREAK, wPara("Heading1", "Thèmes croisés")); for (const t of crossed) x.push(themeXml(t)); }
+  return docxBlob("Cahier de lecture", x.join(""));
+}
+const safeName = s => String(s || "").replace(/[\\/:*?"<>|\u0000-\u001F]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "fiche";
+const MIME = { docx: DOCX_MIME, md: "text/markdown", json: "application/json" };
+// Partage par le menu Android quand Chrome l'accepte pour ce type de fichier, sinon enregistrement dans Téléchargements.
+async function saveFile(filename, build, mode) {
+  let data;
+  try { data = build(); } catch (_) { toast("Le fichier n'a pas pu être préparé."); return; }
+  const ext = filename.split(".").pop();
+  const type = MIME[ext] || "application/octet-stream";
+  const blob = data instanceof Blob ? data : new Blob([data], { type });
+  if (mode === "share") {
+    try {
+      const file = new File([blob], filename, { type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    toast(`« ${filename} » est enregistré dans vos téléchargements.`);
+  } catch (_) { toast("Le fichier n'a pas pu être enregistré."); }
+}
+
+/* ---------- export Markdown ---------- */
+function toMarkdown() {
+  const books = [...S.books.values()].sort(byCote);
+  const out = [`# Cahier de lecture`, ``, `Exporté le ${fmtDate(new Date().toISOString())} · ${plural(books.length, "ouvrage")}`, ``];
+  for (const b of books) {
+    const t = TYPES[b.type] || TYPES.autre;
+    out.push(`## ${b.title}${b.author ? ` · ${b.author}` : ""}`, ``);
+    out.push(`\`${b.cote || ""}\` · ${t.label}${pubLabel(b.published) ? ` · Première parution : ${pubLabel(b.published)}` : ""} · ${STATUS[b.status] || ""}${readLong(b) ? ` · Lecture : ${readLong(b)}` : ""}`);
+    if ((b.themes || []).length) out.push(``, `Thèmes : ${b.themes.join(", ")}`);
+    const s = b.synthesis;
+    if (s && s.phrase) {
+      out.push(``, `### Idée maîtresse`, ``, `**${s.phrase}**`);
+      if (s.developpement) out.push(``, s.developpement);
+      if ((s.points || []).length) out.push(``, `${t.points} :`, ``, ...s.points.map(p => `- ${p}`));
+      if (s.aCreuser) out.push(``, `À creuser : ${s.aCreuser}`);
+    }
+    if ((b.quotes || []).length) {
+      out.push(``, `### Citations`);
+      for (const q of b.quotes) { out.push(``, ...String(q.text).split("\n").map(l => `> ${l}`)); if (q.page) out.push(`> (p. ${cleanPage(q.page)})`); if (q.comment) out.push(``, q.comment); }
+    }
+    if ((b.notes || []).length) { out.push(``, `### Notes`, ``); for (const n of b.notes) out.push(`- ${String(n.text).replace(/\n/g, " ")}${n.page ? ` (p. ${cleanPage(n.page)})` : ""}`); }
+    if ((b.sources || []).length) { out.push(``, `### Sources externes`, ``); for (const s2 of b.sources) out.push(`- ${s2.label || "Source"}${s2.url ? ` : ${s2.url}` : ""}`); }
+    out.push(``, `---`, ``);
+  }
+  const crossed = crossedThemes();
+  if (crossed.length) {
+    out.push(`# Thèmes croisés`, ``);
+    for (const d of crossed) {
+      const r = d.result;
+      out.push(`## ${d.theme}`, ``, `**${r.these}**`, ``, r.synthese || "");
+      if ((r.convergences || []).length) out.push(``, `Convergences :`, ``, ...r.convergences.map(c => `- ${c}`));
+      if ((r.divergences || []).length) out.push(``, `Tensions et différences :`, ``, ...r.divergences.map(c => `- ${c}`));
+      for (const c of (r.citations || [])) out.push(``, `> ${String(c.text).replace(/\n/g, " ")}`, `> (${c.title}${c.page ? `, p. ${cleanPage(c.page)}` : ""})`);
+      if (r.question) out.push(``, `Pour prolonger : ${r.question}`);
+      out.push(``);
+    }
+  }
+  return out.join("\n");
+}
+
+/* ---------- sauvegarde et restauration ---------- */
+function backupData() {
+  return JSON.stringify({
+    format: "cahier-de-lecture", version: 1, exportedAt: new Date().toISOString(),
+    books: [...S.books].map(([id, b]) => Object.assign({ id }, b)),
+    themes: [...S.themeDocs.values()].map(t => Object.assign({ id: themeDocId(t.theme) }, t))
+  }, null, 1);
+}
+function sanitizeBook(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
+  const title = str(raw.title, 300).trim();
+  if (!title) return null;
+  const items = (arr, keys) => (Array.isArray(arr) ? arr : []).slice(0, 2000).map(x => {
+    if (!x || typeof x !== "object") return null;
+    const o = { id: ID_OK.test(String(x.id || "")) ? String(x.id) : newId(), at: str(x.at, 40) };
+    for (const [k, n] of keys) o[k] = str(x[k], n);
+    return o.text ? o : null;
+  }).filter(Boolean);
+  const strs = (a, n, max) => (Array.isArray(a) ? a : []).filter(v => typeof v === "string").map(v => v.slice(0, n)).slice(0, max);
+  const inbox = (Array.isArray(raw.inbox) ? raw.inbox : []).slice(0, 200).map(x => x && typeof x === "object" ? {
+    id: ID_OK.test(String(x.id || "")) ? String(x.id) : newId(), at: str(x.at, 40), page: str(x.page, 12), note: str(x.note, 500),
+    paras: strs(x.paras, 20000, 60),
+    marked: (Array.isArray(x.marked) ? x.marked : []).slice(0, 20).map(m => ({ text: str(m && m.text, 20000), mark: str(m && m.mark, 60) })).filter(m => m.text)
+  } : null).filter(x => x && (x.paras.length || x.marked.length));
+  const pub = typeof raw.published === "number" && Number.isFinite(raw.published) ? Math.trunc(raw.published) : null;
+  const syn = raw.synthesis && typeof raw.synthesis === "object" && typeof raw.synthesis.phrase === "string" ? clone(raw.synthesis) : null;
+  return {
+    id: ID_OK.test(String(raw.id || "")) && !String(raw.id).startsWith("theme-") ? String(raw.id) : newId(),
+    book: {
+      kind: "book", title,
+      author: str(raw.author, 200), published: pub,
+      type: TYPES[raw.type] ? raw.type : "autre",
+      status: STATUS[raw.status] ? raw.status : "a-lire",
+      readOn: /^\d{4}(-\d{2})?$/.test(String(raw.readOn || "")) ? String(raw.readOn) : null,
+      finishedOn: null,
+      themes: parseThemes(strs(raw.themes, 40, 12).join(",")),
+      cote: str(raw.cote, 20), createdAt: str(raw.createdAt, 40), updatedAt: str(raw.updatedAt, 40),
+      quotes: items(raw.quotes, [["text", 20000], ["page", 20], ["comment", 5000]]),
+      notes: items(raw.notes, [["text", 20000], ["page", 20]]),
+      sources: items(raw.sources, [["label", 300], ["url", 1000], ["text", 20000]]),
+      inbox, synthesis: syn
+    }
+  };
+}
+function sanitizeTheme(raw) {
+  if (!raw || typeof raw !== "object" || typeof raw.theme !== "string" || !raw.result || typeof raw.result !== "object" || typeof raw.result.these !== "string") return null;
+  const theme = parseThemes(raw.theme)[0];
+  if (!theme) return null;
+  return { id: themeDocId(theme), doc: { kind: "theme", theme, result: clone(raw.result), at: typeof raw.at === "string" ? raw.at : "", basis: raw.basis && typeof raw.basis === "object" ? clone(raw.basis) : { ids: [], sig: "" }, updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : "" } };
+}
+function parseBackup(text) {
+  let j;
+  try { j = JSON.parse(text); } catch (_) { return null; }
+  if (!j || j.format !== "cahier-de-lecture" || !Array.isArray(j.books)) return null;
+  const books = j.books.map(sanitizeBook).filter(Boolean);
+  const themes = (Array.isArray(j.themes) ? j.themes : []).map(sanitizeTheme).filter(Boolean);
+  const writes = [];
+  let nNew = 0, nNewer = 0, nSame = 0;
+  for (const { id, book } of books) {
+    const cur = S.books.get(id);
+    if (!cur) { nNew++; writes.push({ id, data: book }); }
+    else if (String(book.updatedAt || "") > String(cur.updatedAt || "")) { nNewer++; writes.push({ id, data: book }); }
+    else nSame++;
+  }
+  for (const { id, doc } of themes) {
+    const cur = S.themeDocs.get(doc.theme);
+    if (!cur || String(doc.updatedAt || "") > String(cur.updatedAt || "")) writes.push({ id, data: doc });
+  }
+  return { exportedAt: j.exportedAt, total: books.length, nNew, nNewer, nSame, writes };
+}
+async function runRestore() {
+  const plan = S.restore;
+  closeActions();
+  if (!plan || !plan.writes.length) return;
+  let done = 0, failed = 0;
+  for (const w of plan.writes) { if (await saveDoc(w.id, w.data, true)) done++; else failed++; }
+  toast(failed ? `${plural(done, "élément restauré", "éléments restaurés")}, ${failed} en échec. Relancez l'import pour réessayer.` : `Import terminé : ${plural(done, "élément restauré", "éléments restaurés")}.`);
+}
+$("#restore-input").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  let text = "";
+  try { text = await f.text(); } catch (_) { toast("Ce fichier n'a pas pu être lu."); return; }
+  const plan = parseBackup(text);
+  if (!plan) { toast("Ce fichier n'est pas une sauvegarde du Cahier de lecture."); return; }
+  S.restore = plan;
+  const n = plan.nNew + plan.nNewer;
+  openActions(`<h2 class="sheet-title">Importer une sauvegarde</h2>
+    <p class="sheet-text">Sauvegarde du ${esc(fmtDate(plan.exportedAt) || "?")} : ${plural(plan.total, "fiche")}.</p>
+    <ul class="plan">
+      <li>${plural(plan.nNew, "fiche nouvelle", "fiches nouvelles")} pour ce cahier</li>
+      <li>${plural(plan.nNewer, "fiche plus récente", "fiches plus récentes")} que vos versions : elles les remplaceront</li>
+      <li>${plural(plan.nSame, "fiche déjà à jour", "fiches déjà à jour")} : inchangées</li>
+    </ul>
+    <div class="sheet-actions"><button class="btn ghost" data-act="close-actions">Annuler</button><button class="btn primary" data-act="restore-go"${plan.writes.length ? "" : " disabled"}>${n ? `Importer ${plural(n, "fiche")}` : "Rien à importer"}</button></div>`);
+});
+
+/* ---------- réglages ---------- */
+async function saveKey() {
+  const inp = $("#api-key"), ks = $("#key-status");
+  const v = inp.value.trim();
+  delete inp.dataset.dirty;
+  ks.dataset.locked = "1";
+  if (!v) { ks.className = "set-status bad"; ks.textContent = "Collez d'abord votre clé d'API."; return; }
+  if (!/^sk-ant-/.test(v)) { ks.className = "set-status bad"; ks.textContent = "Cette clé ne ressemble pas à une clé d'API Claude : elle commence d'habitude par « sk-ant- »."; return; }
+  S.apiKey = v; LS.set("cahier.apiKey", v);
+  if (!navigator.onLine) { ks.className = "set-status"; ks.textContent = "Clé enregistrée. Elle sera vérifiée au retour du réseau."; return; }
+  ks.className = "set-status"; ks.innerHTML = '<span class="pulse" aria-hidden="true"></span>Vérification auprès de Claude…';
+  try {
+    await askClaude('Réponds par ce JSON : {"ok":true}', { maxTokens: 20, model: "claude-haiku-5-5" });
+    ks.className = "set-status ok"; ks.textContent = "Clé enregistrée et vérifiée.";
+    processQueue();
+  } catch (e) {
+    ks.className = "set-status bad"; ks.textContent = e && e.code === "invalid_json" ? "Clé enregistrée et vérifiée." : `Clé enregistrée, mais la vérification a échoué : ${errText(e)}`;
+    if (e && e.code === "invalid_json") { ks.className = "set-status ok"; processQueue(); }
+  }
+  renderAll();
+}
+$("#api-key").addEventListener("input", e => { e.target.dataset.dirty = "1"; delete $("#key-status").dataset.locked; });
+for (const r of document.querySelectorAll('input[name="model"]')) {
+  r.addEventListener("change", () => { if (MODELS.includes(r.value)) { S.model = r.value; LS.set("cahier.model", r.value); toast("Modèle enregistré."); } });
+}
+
+/* ---------- menus ---------- */
+const sheetItem = (act, label, sub, cls) => `<button class="sheet-item${cls ? " " + cls : ""}" data-act="${act}"><span>${esc(label)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</span></button>`;
+function openActions(html) { $("#actions-box").innerHTML = html; openModal("#m-actions"); }
+function closeActions() { closeModal("#m-actions"); S.restore = null; }
+function homeMenu() {
+  const it = [`<h2 class="sheet-title">Cahier de lecture</h2>`];
+  it.push(sheetItem("settings", "Réglages", S.apiKey ? "Clé d'API, modèle, données, installation" : "Ajoutez votre clé d'API Claude"));
+  it.push(sheetItem("share-all", "Partager le cahier en Word", "Toutes les fiches, un sommaire et les thèmes croisés"));
+  it.push(sheetItem("export", "Exporter en Markdown", "Texte simple, lisible partout"));
+  it.push(sheetItem("backup", "Sauvegarder le cahier", "Un fichier .json à garder en lieu sûr"));
+  it.push(`<label class="sheet-item" for="restore-input" role="button" tabindex="0"><span>Importer une sauvegarde<span class="sub">Depuis ce téléphone ou depuis le Cahier de lecture de Claude</span></span></label>`);
+  if (S.installEvt) it.push(sheetItem("install", "Installer l'application", "Une icône sur l'écran d'accueil"));
+  it.push(sheetItem("close-actions", "Fermer", "", "muted"));
+  openActions(it.join(""));
+}
+function bookMenu() {
+  const b = S.books.get(S.current); if (!b) return;
+  openActions([`<h2 class="sheet-title">${esc(b.title)}</h2>`,
+    sheetItem("edit-book", "Modifier la fiche", "Titre, auteur, parution, thèmes, signet"),
+    sheetItem("share-book", "Partager la fiche en Word", "Idée maîtresse, citations, notes et sources"),
+    sheetItem("del-book", "Supprimer ce livre", "Avec ses citations, notes et sources", "danger"),
+    sheetItem("close-actions", "Fermer", "", "muted")].join(""));
+}
+async function deleteBook(id) {
+  if (!id) return;
+  try {
+    await idbDel("docs", id);
+    S.books.delete(id);
+    for (const k of KINDS) draftDel(id, k);
+    for (const j of S.jobs.filter(x => x.bookId === id)) await dropJob(j.id);
+    closeActions();
+    const bt = S.backTo || { view: "home" };
+    S.current = null;
+    S.view = bt.view === "book" ? "home" : bt.view;
+    S.themeOpen = bt.theme;
+    renderAll(); window.scrollTo(0, 0);
+    toast("Livre supprimé.");
+  } catch (_) { toast("La suppression a échoué. Recommencez."); }
+}
+async function install() {
+  const e = S.installEvt;
+  if (!e) { go("settings"); return; }
+  try { e.prompt(); const r = await e.userChoice; if (r && r.outcome === "accepted") S.installEvt = null; } catch (_) {}
+  renderAll();
+}
+
+/* ---------- message bref ---------- */
+let toastTimer;
+function toast(msg, action) {
+  const el = $("#toast");
+  el.innerHTML = `<span>${esc(msg)}</span>${action ? `<button class="toast-act" type="button">${esc(action.label)}</button>` : ""}`;
+  if (action) el.querySelector("button").onclick = () => { el.hidden = true; action.fn(); };
+  el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, action ? 6000 : 4200);
+}
+function selectText(node) {
+  try { const r = document.createRange(); r.selectNodeContents(node); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (_) {}
+}
+function copyFrom(btn, node, label) {
+  const done = l => { btn.textContent = l; setTimeout(() => { btn.textContent = label; }, 2200); };
+  try {
+    navigator.clipboard.writeText(node.textContent).then(() => done("Copié"), () => { selectText(node); done("Texte sélectionné : copiez-le"); });
+  } catch (_) { selectText(node); done("Texte sélectionné : copiez-le"); }
+}
+
+/* ---------- événements ---------- */
+$("#search").addEventListener("input", e => { S.query = e.target.value; renderHome(); });
+$("#sort").addEventListener("change", e => { S.sort = SORTS[e.target.value] ? e.target.value : "recent"; LS.set("cahier.sort", S.sort); renderHome(); });
+$("#m-actions").addEventListener("click", e => { if (e.target === e.currentTarget) closeActions(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (!$("#m-actions").hidden) closeActions();
+    else if (!$("#m-compose").hidden) closeComposer();
+    else if (!$("#m-book").hidden) closeBookForm();
+    return;
+  }
+  const lab = e.target.closest && e.target.closest("label[role=button]");
+  if (lab && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    if (lab.dataset.photoFor) S.photoFor = lab.dataset.photoFor;
+    const input = document.getElementById(lab.htmlFor);
+    if (input) input.click();
+  }
+});
+$(".tabs").addEventListener("keydown", e => {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const i = KINDS.indexOf(S.tab), j = (i + (e.key === "ArrowRight" ? 1 : KINDS.length - 1)) % KINDS.length;
+  S.tab = KINDS[j]; renderBook(); $("#tab-" + S.tab).focus();
+});
+document.addEventListener("click", e => {
+  const lab = e.target.closest("[data-photo-for]");
+  if (lab) S.photoFor = lab.dataset.photoFor;
+}, true);
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-open],[data-act],[data-status],[data-theme-open],[data-edit],[data-del],[data-kw],[data-tab],[data-pick],[data-nav],[data-compose],[data-set-status],[data-inbox],[data-inbox-drop]");
+  if (!el) return;
+  if (el.dataset.open) { closeActions(); if (S.composer) closeComposer(); openBook(el.dataset.open); return; }
+  if (el.dataset.nav) { go(el.dataset.nav); return; }
+  if (el.dataset.themeOpen !== undefined) { if (S.view === "book") S.backTo = null; go("theme", el.dataset.themeOpen); return; }
+  if (el.dataset.status) { S.status = el.dataset.status; renderHome(); return; }
+  if (el.dataset.setStatus) { setStatus(S.current, el.dataset.setStatus); return; }
+  if (el.dataset.compose) { openComposer(el.dataset.compose, el.dataset.book || S.current); return; }
+  if (el.dataset.tab) { S.tab = el.dataset.tab; renderBook(); return; }
+  if (el.dataset.edit) { const [k, id] = el.dataset.edit.split(":"); openComposer(k, S.current, id); return; }
+  if (el.dataset.del) { const [k, id] = el.dataset.del.split(":"); armOrRun(el, () => deleteItem(k, id)); return; }
+  if (el.dataset.kw) { addKeyword(el.dataset.kw); return; }
+  if (el.dataset.inbox) { openInbox(el.dataset.inbox); return; }
+  if (el.dataset.inboxDrop) { const id = el.dataset.inboxDrop; armOrRun(el, () => dropInbox(S.current, id), "Confirmer"); return; }
+  if (el.dataset.pick) {
+    const key = el.dataset.pick, i = +key.slice(1), o = S.ocr;
+    if (!o) return;
+    const text = key[0] === "m" ? (o.marked[i] || {}).text : o.paras[i];
+    if (text) useOcrText(text, key);
+    return;
+  }
+  switch (el.dataset.act) {
+    case "add": openBookForm(null); break;
+    case "close-book": closeBookForm(); break;
+    case "close-compose": closeComposer(); break;
+    case "back": back(); break;
+    case "settings": closeActions(); if (S.composer) closeComposer(); go("settings"); break;
+    case "menu-home": homeMenu(); break;
+    case "menu-book": bookMenu(); break;
+    case "close-actions": closeActions(); break;
+    case "edit-book": closeActions(); if (S.current) openBookForm(S.current); break;
+    case "idea-toggle": S.ideaOpen = !S.ideaOpen; renderBook(); break;
+    case "synth": runSynth(S.current, false); break;
+    case "synth-stop": if (S.synth) S.synth.ctl.abort(); break;
+    case "tsynth": runThemeSynth(S.themeOpen, false); break;
+    case "tsynth-stop": if (S.tsynth) S.tsynth.ctl.abort(); break;
+    case "photo-stop": if (S.ocrCtl) S.ocrCtl.abort(); break;
+    case "photo-close": closePhoto(); break;
+    case "inbox-drop-current": {
+      const o = S.ocr, c = S.composer;
+      if (o && o.fromInbox && c) { dropInbox(c.bookId, o.fromInbox); closePhoto(); }
+      break;
+    }
+    case "pick-selection":
+      if (S.lastSel) useOcrText(S.lastSel, null);
+      else setPhotoStatus("Sélectionnez d'abord une phrase dans le texte transcrit, en maintenant le doigt dessus.");
+      break;
+    case "accept-pub": {
+      const b = S.books.get(S.current);
+      if (!b || !b.synthesis || b.synthesis.anneeParution == null) break;
+      const nb = clone(b); nb.published = b.synthesis.anneeParution;
+      saveBook(S.current, nb).then(ok => ok && toast("Année de première parution enregistrée."));
+      break;
+    }
+    case "share-all": closeActions(); saveFile(`Cahier de lecture - ${todayISO()}.docx`, libraryDocx, "share"); break;
+    case "share-book": {
+      const b = S.books.get(S.current);
+      closeActions();
+      if (b) saveFile(`Fiche - ${safeName(b.title)}.docx`, () => bookDocx(b), "share");
+      break;
+    }
+    case "export": closeActions(); saveFile("cahier-de-lecture.md", toMarkdown, "share"); break;
+    case "backup": closeActions(); saveFile(`Cahier de lecture - sauvegarde ${todayISO()}.json`, backupData, "download"); break;
+    case "restore-go": runRestore(); break;
+    case "del-book": {
+      const id = S.current;
+      armOrRun(el, () => deleteBook(id), "Toucher à nouveau pour supprimer définitivement");
+      break;
+    }
+    case "install": closeActions(); install(); break;
+    case "key-save": saveKey(); break;
+    case "key-toggle": {
+      const inp = $("#api-key"), show = inp.type === "password";
+      inp.type = show ? "text" : "password"; el.textContent = show ? "Masquer" : "Afficher";
+      break;
+    }
+    case "key-clear": armOrRun(el, () => {
+      S.apiKey = ""; LS.del("cahier.apiKey"); $("#api-key").value = ""; delete $("#key-status").dataset.locked;
+      renderAll(); toast("Clé effacée de ce téléphone.");
+    }, "Confirmer l'effacement"); break;
+    case "queue-run":
+      if (!S.jobs.length) toast("Aucune demande en attente.");
+      else if (!S.apiKey) toast(ERR.no_key);
+      else if (!navigator.onLine) toast("Toujours pas de réseau. Les demandes partiront dès son retour.");
+      else processQueue();
+      break;
+    case "queue-clear": armOrRun(el, async () => {
+      for (const j of [...S.jobs]) await dropJob(j.id);
+      renderAll(); toast("File vidée.");
+    }, "Confirmer"); break;
+    case "copy-ask": copyFrom(el, $("#research-ask"), "Copier la demande"); break;
+  }
+});
+
+boot();
+})();
+</script>
+
+</body>
+</html>
