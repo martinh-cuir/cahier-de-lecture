@@ -7,6 +7,10 @@
 <meta name="description" content="Vos lectures, citations et notes, avec l'idée maîtresse de chaque livre établie par Claude. Fonctionne hors ligne.">
 <meta name="theme-color" content="#22261A">
 <meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cahier">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -477,7 +481,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
 
       <section class="set-card" aria-labelledby="set-data-title">
         <h2 id="set-data-title">Vos données</h2>
-        <p class="help">Vos fiches sont enregistrées dans ce téléphone, et nulle part ailleurs. Sauvegardez régulièrement : une sauvegarde se restaure ici ou dans le Cahier de lecture de Claude.</p>
+        <p class="help">Vos fiches sont enregistrées dans ce téléphone, et nulle part ailleurs. Sauvegardez régulièrement. Une sauvegarde se restaure ici, sur un autre téléphone (Android ou iPhone) ou dans le Cahier de lecture de Claude.</p>
         <p class="set-status" id="persist-status"></p>
         <div class="set-actions">
           <button class="btn ghost small" type="button" data-act="backup">Sauvegarder le cahier</button>
@@ -487,8 +491,15 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
 
       <section class="set-card" id="install-card" aria-labelledby="set-install-title">
         <h2 id="set-install-title">Installer l'application</h2>
-        <p class="help" id="install-help">Dans Chrome, ouvrez le menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</p>
+        <p class="help" id="install-help"></p>
         <div class="set-actions"><button class="btn primary small" type="button" data-act="install" id="install-btn" hidden>Installer sur ce téléphone</button></div>
+      </section>
+
+      <section class="set-card" aria-labelledby="set-share-title">
+        <h2 id="set-share-title">Partager avec des amis</h2>
+        <p class="help">Envoyez le lien de l'application : elle s'installe sur Android comme sur iPhone. Chacun a son propre cahier, privé, dans son téléphone, et utilise sa propre clé d'API Claude. Rien de votre cahier n'est envoyé.</p>
+        <p class="ask" id="app-url"></p>
+        <div class="set-actions"><button class="btn ghost small" type="button" data-act="share-app">Partager le lien</button></div>
       </section>
 
       <p class="version" id="version"></p>
@@ -676,7 +687,7 @@ details.excerpt .text{margin-top:.4rem;font-size:var(--s-sm)}
 <script>
 (() => {
 "use strict";
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 
 /* ---------- utilitaires ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -709,6 +720,19 @@ const MONTHS_SHORT = ["janv.","févr.","mars","avr.","mai","juin","juil.","août
 const KINDS = ["quotes", "notes", "sources"];
 const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
 const DEFAULT_MODEL = "claude-sonnet-5-5";
+const UA = navigator.userAgent || "";
+const IS_IOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IS_IOS_SAFARI = IS_IOS && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(UA);
+const isStandalone = () => { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (_) { return navigator.standalone === true; } };
+const APP_URL = location.origin + location.pathname.replace(/index\.html$/, "");
+function installHelp() {
+  if (isStandalone()) return "L'application est installée sur ce téléphone.";
+  if (IS_IOS) return IS_IOS_SAFARI
+    ? "Touchez le bouton Partager de Safari (le carré avec une flèche), puis « Sur l'écran d'accueil ». Ouvrez ensuite le Cahier depuis son icône."
+    : "Touchez le bouton Partager, puis « Sur l'écran d'accueil ». Si l'option n'apparaît pas, ouvrez cette page dans Safari.";
+  if (S.installEvt) return "Une icône sur l'écran d'accueil, qui s'ouvre en plein écran.";
+  return "Dans Chrome, ouvrez le menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».";
+}
 
 function readParts(b) {
   const v = (b && (b.readOn || (b.finishedOn ? String(b.finishedOn).slice(0, 7) : ""))) || "";
@@ -983,13 +1007,15 @@ function currentHTML() {
   </div>`;
 }
 function welcomeHTML() {
+  const installed = isStandalone();
   return `<div class="welcome">
     <h2>Bienvenue dans votre Cahier de lecture</h2>
-    <p>Tout reste dans ce téléphone et fonctionne sans réseau. Trois étapes pour bien démarrer :</p>
+    <p>Votre cahier reste dans ce téléphone, privé, et fonctionne sans réseau. Pour bien démarrer :</p>
+    ${IS_IOS && !installed ? `<p class="caution">Sur iPhone, installez d'abord l'application, puis continuez depuis son icône : Safari et l'application installée ne gardent pas les mêmes fiches.</p>` : ""}
     <ol class="steps">
-      <li><strong>Reprendre votre cahier de Claude</strong><span class="help">Dans le Cahier de lecture de Claude, menu ⋯, « Sauvegarder le cahier ». Importez ici le fichier obtenu.</span><label class="btn ghost small" for="restore-input" role="button" tabindex="0">Importer une sauvegarde</label></li>
-      <li><strong>Ajouter votre clé d'API Claude</strong><span class="help">Pour l'idée maîtresse, la lecture des photos et les thèmes croisés.</span><button class="btn ghost small" data-act="settings">${S.apiKey ? "Clé enregistrée · Réglages" : "Ouvrir les réglages"}</button></li>
-      <li><strong>Installer l'application</strong><span class="help">${S.installEvt ? "Une icône sur l'écran d'accueil, en plein écran." : "Dans Chrome, menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil »."}</span>${S.installEvt ? '<button class="btn ghost small" data-act="install">Installer</button>' : ""}</li>
+      <li><strong>${installed ? "Application installée" : "Installer l'application"}</strong><span class="help">${esc(installHelp())}</span>${S.installEvt && !installed ? '<button class="btn ghost small" data-act="install">Installer</button>' : ""}</li>
+      <li><strong>Ajouter votre clé d'API Claude</strong><span class="help">Pour l'idée maîtresse, la lecture des photos et les thèmes croisés. Chacun utilise sa propre clé.</span><button class="btn ghost small" data-act="settings">${S.apiKey ? "Clé enregistrée · Réglages" : "Ouvrir les réglages"}</button></li>
+      <li><strong>Reprendre un cahier existant (facultatif)</strong><span class="help">Une sauvegarde faite dans le Cahier de Claude ou sur un autre téléphone, Android ou iPhone.</span><label class="btn ghost small" for="restore-input" role="button" tabindex="0">Importer une sauvegarde</label></li>
     </ol>
     <button class="btn primary" data-act="add">Ajouter un premier livre</button>
   </div>`;
@@ -1222,10 +1248,11 @@ function renderSettings() {
   $("#queue-status").textContent = S.jobs.length
     ? `${plural(S.jobs.length, "demande")} en attente : ${[["synth", "idée maîtresse"], ["theme", "thème croisé"], ["ocr", "photo"]].map(([k, l]) => { const n = S.jobs.filter(j => j.type === k).length; return n ? `${n} ${l}${n > 1 ? "s" : ""}` : ""; }).filter(Boolean).join(", ")}.`
     : "Aucune demande en attente.";
-  $("#persist-status").textContent = S.persisted === true ? "Stockage protégé : Android ne l'effacera pas pour libérer de la place."
-    : S.persisted === false ? "Stockage non protégé : installez l'application pour qu'Android ne l'efface pas en cas de manque de place." : "";
-  $("#install-btn").hidden = !S.installEvt;
-  $("#install-help").textContent = S.installEvt ? "L'application s'ajoutera à votre écran d'accueil et s'ouvrira en plein écran." : "Dans Chrome, ouvrez le menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil ». Si l'application est déjà installée, il n'y a rien à faire.";
+  $("#persist-status").textContent = S.persisted === true ? "Stockage protégé : le téléphone ne l'effacera pas pour libérer de la place."
+    : S.persisted === false ? "Stockage non protégé : installez l'application pour que le téléphone ne l'efface pas en cas de manque de place." : "";
+  $("#install-btn").hidden = !S.installEvt || isStandalone();
+  $("#install-help").textContent = installHelp();
+  $("#app-url").textContent = APP_URL;
   $("#version").textContent = `Cahier de lecture · version ${APP_VERSION}`;
 }
 
@@ -2152,14 +2179,14 @@ function libraryDocx() {
 }
 const safeName = s => String(s || "").replace(/[\\/:*?"<>|\u0000-\u001F]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "fiche";
 const MIME = { docx: DOCX_MIME, md: "text/markdown", json: "application/json" };
-// Partage par le menu Android quand Chrome l'accepte pour ce type de fichier, sinon enregistrement dans Téléchargements.
+// Partage par le menu du téléphone quand il accepte ce type de fichier (toujours tenté sur iPhone), sinon enregistrement dans Téléchargements.
 async function saveFile(filename, build, mode) {
   let data;
   try { data = build(); } catch (_) { toast("Le fichier n'a pas pu être préparé."); return; }
   const ext = filename.split(".").pop();
   const type = MIME[ext] || "application/octet-stream";
   const blob = data instanceof Blob ? data : new Blob([data], { type });
-  if (mode === "share") {
+  if (mode === "share" || IS_IOS) {
     try {
       const file = new File([blob], filename, { type });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2353,7 +2380,8 @@ function homeMenu() {
   it.push(sheetItem("share-all", "Partager le cahier en Word", "Toutes les fiches, un sommaire et les thèmes croisés"));
   it.push(sheetItem("export", "Exporter en Markdown", "Texte simple, lisible partout"));
   it.push(sheetItem("backup", "Sauvegarder le cahier", "Un fichier .json à garder en lieu sûr"));
-  it.push(`<label class="sheet-item" for="restore-input" role="button" tabindex="0"><span>Importer une sauvegarde<span class="sub">Depuis ce téléphone ou depuis le Cahier de lecture de Claude</span></span></label>`);
+  it.push(`<label class="sheet-item" for="restore-input" role="button" tabindex="0"><span>Importer une sauvegarde<span class="sub">Depuis le Cahier de Claude ou un autre téléphone</span></span></label>`);
+  it.push(sheetItem("share-app", "Partager l'application", "Envoyer le lien à un ami, sur Android ou iPhone"));
   if (S.installEvt) it.push(sheetItem("install", "Installer l'application", "Une icône sur l'écran d'accueil"));
   it.push(sheetItem("close-actions", "Fermer", "", "muted"));
   openActions(it.join(""));
@@ -2381,6 +2409,12 @@ async function deleteBook(id) {
     renderAll(); window.scrollTo(0, 0);
     toast("Livre supprimé.");
   } catch (_) { toast("La suppression a échoué. Recommencez."); }
+}
+async function shareApp() {
+  const data = { title: "Cahier de lecture", text: "Mon cahier de lecture sur téléphone : citations, notes, photos de pages et l'idée maîtresse de chaque livre par Claude. Fonctionne hors ligne, sur Android et iPhone. Chacun a son propre cahier, privé.", url: APP_URL };
+  try { if (navigator.share) { await navigator.share(data); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(APP_URL); toast("Lien copié : collez-le dans un message."); }
+  catch (_) { toast(`Lien de l'application : ${APP_URL}`); }
 }
 async function install() {
   const e = S.installEvt;
@@ -2508,6 +2542,7 @@ document.addEventListener("click", e => {
       break;
     }
     case "install": closeActions(); install(); break;
+    case "share-app": closeActions(); shareApp(); break;
     case "key-save": saveKey(); break;
     case "key-toggle": {
       const inp = $("#api-key"), show = inp.type === "password";

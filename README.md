@@ -1,6 +1,6 @@
 # Cahier de lecture
 
-Application de lecture pour Android, installable depuis Chrome et utilisable hors ligne.
+Application de lecture pour téléphone, **Android comme iPhone**, installable depuis le navigateur et utilisable hors ligne.
 Pour chaque livre : citations (recopiées ou photographiées), notes, sources, signet de lecture,
 et une **idée maîtresse** établie par Claude. Les livres qui partagent un thème peuvent
 **dialoguer** dans une synthèse croisée.
@@ -8,11 +8,27 @@ et une **idée maîtresse** établie par Claude. Les livres qui partagent un th�
 Ce dépôt ne contient que le code de l'application. Vos fiches et votre clé d'API restent
 dans votre téléphone : elles ne sont jamais envoyées sur GitHub.
 
+Adresse de l'application : <https://martinh-cuir.github.io/cahier-de-lecture/>
+
 ## Installer sur Android
 
-1. Ouvrez l'adresse de l'application dans **Chrome** : `https://VOTRE-COMPTE.github.io/cahier-de-lecture/`
+1. Ouvrez l'adresse de l'application dans **Chrome**.
 2. Touchez le menu **⋮**, puis **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
 3. L'icône du Cahier apparaît sur l'écran d'accueil. L'application s'ouvre en plein écran, même sans réseau.
+
+## Installer sur iPhone
+
+1. Ouvrez l'adresse de l'application dans **Safari**.
+2. Touchez le bouton **Partager** (le carré avec une flèche), puis **Sur l'écran d'accueil**.
+3. Ouvrez ensuite le Cahier **depuis son icône** : sur iPhone, Safari et l'application installée
+   ne gardent pas les mêmes fiches. Importez vos sauvegardes dans l'application installée.
+
+## Partager avec des amis
+
+Envoyez simplement l'adresse, ou utilisez le menu **⋯**, **Partager l'application**.
+Chaque personne qui l'installe a son propre cahier, vide et privé, dans son téléphone,
+et utilise sa propre clé d'API Claude. Rien de votre cahier n'est transmis.
+Pour donner une copie de vos fiches à quelqu'un, envoyez-lui une sauvegarde ou un export Word.
 
 ## Reprendre vos fiches depuis Claude
 
@@ -40,11 +56,13 @@ L'usage de l'API est facturé à la demande sur votre compte API, en dehors de t
 
 ## Vos données
 
-- Les fiches sont stockées dans le navigateur du téléphone (IndexedDB). Installez l'application :
-  Android protège alors ce stockage contre l'effacement automatique.
+- Les fiches sont stockées dans le téléphone (IndexedDB). Installez l'application :
+  le téléphone protège alors ce stockage contre l'effacement automatique.
+- Chaque téléphone a son propre cahier. Pour passer d'un téléphone à un autre (Android ou iPhone) :
+  **Sauvegarder le cahier** sur l'ancien, **Importer une sauvegarde** sur le nouveau.
 - La clé d'API reste dans le téléphone. Elle n'est envoyée qu'à `api.anthropic.com`.
 - Sauvegardez régulièrement (menu **⋯**, **Sauvegarder le cahier**) : désinstaller l'application
-  ou effacer les données de Chrome supprime aussi les fiches.
+  ou effacer les données du navigateur supprime aussi les fiches.
 - Les pages publiées sous la même adresse `VOTRE-COMPTE.github.io` partagent le même espace de stockage.
   Ne publiez à cette adresse que du code en qui vous avez confiance.
 
