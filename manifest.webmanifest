@@ -9,8 +9,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#22261A",
-  "theme_color": "#22261A",
+  "background_color": "#1E1510",
+  "theme_color": "#160F0B",
   "categories": [
     "books",
     "education",

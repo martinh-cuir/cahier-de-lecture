@@ -5,6 +5,10 @@ Pour chaque livre : citations (recopiées ou photographiées), notes, sources, s
 et une **idée maîtresse** établie par l'IA de votre choix : **Claude, ChatGPT, Gemini ou Mistral**. Les livres qui partagent un thème peuvent
 **dialoguer** dans une synthèse croisée.
 
+L'IA est facultative : on peut tenir son cahier sans clé et l'activer plus tard.
+L'interface s'inspire d'une salle de lecture de bibliothèque universitaire (noyer, cuir, laiton),
+avec deux vues de l'accueil, **Fiches** et **Rayonnage**, et une page de garde pour chaque livre.
+
 Ce dépôt ne contient que le code de l'application. Vos fiches et votre clé d'API restent
 dans votre téléphone : elles ne sont jamais envoyées sur GitHub.
 
@@ -49,7 +53,7 @@ Chaque personne utilise sa propre clé d'API, gardée dans son téléphone.
 | Gemini (Google) | <https://aistudio.google.com/>, bouton « Get API key » |
 | Mistral | <https://console.mistral.ai/>, rubrique API Keys |
 
-1. Dans l'application : menu **⋯**, **Réglages**, rubrique **Votre IA**.
+1. Dans l'application : bouton **Réglages** (la roue dentée en haut de l'accueil), rubrique **Votre IA**.
 2. Choisissez le service, collez la clé, puis touchez **Enregistrer et vérifier**.
 3. L'application lit la liste des modèles disponibles avec votre clé et en recommande un.
    Vous pouvez en choisir un autre ; pour photographier des pages, il doit savoir lire les images.
@@ -57,6 +61,15 @@ Chaque personne utilise sa propre clé d'API, gardée dans son téléphone.
 L'usage des API est facturé à la demande par chaque service, en dehors des abonnements grand public
 (Claude, ChatGPT Plus…). Google et Mistral proposent en général un usage gratuit limité.
 Vous pouvez changer d'IA à tout moment : chaque fiche indique quelle IA a établi sa synthèse.
+
+## Couvertures
+
+Sur la fiche d'un livre, **Trouver la couverture** (ou menu **⋯**, **Couverture**) cherche l'image
+sur **Google Livres** et **Open Library**. Touchez celle de votre édition ; l'ISBN, facultatif dans la fiche,
+rend la recherche plus précise. Sans couverture choisie, le livre garde sa reliure dessinée.
+
+La recherche envoie à ces deux services le titre, le nom de l'auteur et l'ISBN, rien d'autre.
+Les couvertures choisies sont gardées dans le téléphone pour rester visibles hors ligne.
 
 ## Hors ligne
 

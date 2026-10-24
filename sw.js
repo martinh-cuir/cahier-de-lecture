@@ -1,7 +1,7 @@
 /* Cahier de lecture : service worker.
    Garde l'application dans le téléphone pour qu'elle s'ouvre sans réseau.
    Changer VERSION à chaque mise à jour publiée. */
-const VERSION = "cahier-1.2.0";
+const VERSION = "cahier-2.0.0";
 const SHELL = [
   "./",
   "./index.html",
@@ -12,6 +12,7 @@ const SHELL = [
   "./icons/apple-touch-icon.png"
 ];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
+const COVER_HOSTS = ["covers.openlibrary.org", "books.google.com", "books.googleusercontent.com"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -20,7 +21,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== "cahier-fonts").map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== "cahier-fonts" && k !== "cahier-covers").map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -29,6 +30,14 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+
+  // Couvertures : l'application range elle-même celles que vous avez choisies.
+  if (COVER_HOSTS.includes(url.hostname)) {
+    event.respondWith(
+      caches.open("cahier-covers").then(c => c.match(req.url)).then(hit => hit || fetch(req)).catch(() => Response.error())
+    );
+    return;
+  }
 
   // Polices : servies depuis le téléphone une fois téléchargées.
   if (FONT_HOSTS.includes(url.hostname)) {
